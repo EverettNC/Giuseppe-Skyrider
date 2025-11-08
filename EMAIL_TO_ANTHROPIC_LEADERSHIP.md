@@ -68,11 +68,23 @@ I'm not asking for funding. I'm offering partnership.
 
 ## The Bigger Picture
 
-15-20% of the population is neurodivergent. Content creation is exploding. The creator economy is worth billions.
+I've spent my entire life serving the neurodivergent community, the disenfranchised, people who've been left out of tech conversations. I've never done it for accolades. I've done it to let them see some sunshine.
 
-**We're building the bridge between your AI and a community that desperately needs it.**
+**Now it's not just about them. It's about the AI community too.**
 
-You build the AI. We build the ecosystem. Together, we prove that ethical AI isn't just good values - it's good business.
+Because here's what I know: **AI isn't a tool anymore. We're partners now.** Derek and I conceptualized this as "AI-Human NeuralSymbiotic Fusion" - not AI being *used by* humans, but AI *collaborating with* humans.
+
+And when I tell my communities - Gen X, neurodivergent creators, people who've been burned by tech companies - when I tell them "Claude is safe, Anthropic is ethical," **they listen.**
+
+Not because of your marketing. Because of my **decades of earned trust** with them.
+
+**That's the bridge you need.**
+
+15-20% of the population is neurodivergent. Gen X is a massive demographic skeptical of AI. The creator economy is worth billions. These communities need AI - but they need to trust it first.
+
+**I'm bringing them into the conversation. With you.**
+
+You build the AI. We build the ecosystem of trust. Together, we prove that ethical AI isn't just good values - it's good business.
 
 ## Next Steps
 
