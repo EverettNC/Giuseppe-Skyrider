@@ -155,7 +155,7 @@ export function GiovanniSocialMedia() {
       d.id === id ? { ...d, status: 'scheduled' as const } : d
     ))
 
-    speak('Scheduled! I'll remind you when it's time to post.', 'hype')
+    speak('Scheduled! I\'ll remind you when it\'s time to post.', 'hype')
   }
 
   return (

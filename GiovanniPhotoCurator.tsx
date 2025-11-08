@@ -122,7 +122,7 @@ export function GiovanniPhotoCurator() {
       .sort((a, b) => (b.engagement_score || 0) - (a.engagement_score || 0))
 
     if (topPhotos.length === 0) {
-      speak('Upload some photos first, then I'll tell you what's gonna hit.', 'sassy')
+      speak('Upload some photos first, then I\'ll tell you what\'s gonna hit.', 'sassy')
       return
     }
 
