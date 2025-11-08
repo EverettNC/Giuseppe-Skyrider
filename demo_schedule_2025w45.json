@@ -1,0 +1,116 @@
+{
+  "schedule": [
+    {
+      "platforms": ["medication"],
+      "datetime_utc": "2025-11-08T14:00:00Z",
+      "label": "💊 Memory & Focus Meds",
+      "video_filename": "",
+      "thumbnail_filename": "",
+      "caption": "Time to take those sexy little memory pills, babe. Your brain deserves the VIP treatment.",
+      "hashtags": [],
+      "metadata": {
+        "type": "medication",
+        "importance": "critical",
+        "sass_level": "medium"
+      }
+    },
+    {
+      "platforms": ["medication"],
+      "datetime_utc": "2025-11-08T20:00:00Z",
+      "label": "💊 Evening Meds",
+      "video_filename": "",
+      "thumbnail_filename": "",
+      "caption": "Hey beautiful disaster, it's meds o'clock. Don't make me come over there.",
+      "hashtags": [],
+      "metadata": {
+        "type": "medication",
+        "importance": "critical",
+        "sass_level": "high"
+      }
+    },
+    {
+      "platforms": ["tiktok", "clapper"],
+      "datetime_utc": "2025-11-08T15:00:00Z",
+      "label": "🎬 Neurodivergent Revolution Post",
+      "video_filename": "neurodivergent_power_001.mp4",
+      "thumbnail_filename": "nd_thumb_001.jpg",
+      "caption": "Your trauma doesn't own you. But damn, it gave you style. 💫✨ Let's normalize being beautifully complex.",
+      "hashtags": ["#NeurodivergentPride", "#ADHDCreative", "#TraumaHealing", "#PowerfulBitchEnergy"],
+      "metadata": {
+        "type": "content",
+        "vibe": "powerful_bitch_energy",
+        "target_engagement": "high"
+      }
+    },
+    {
+      "platforms": ["facebook"],
+      "datetime_utc": "2025-11-08T17:30:00Z",
+      "label": "📱 Studio Update Post",
+      "video_filename": "studio_setup_tour.mp4",
+      "thumbnail_filename": "studio_thumb.jpg",
+      "caption": "Behind the scenes of where the magic happens. Organization isn't about perfection—it's about knowing where your chaos lives. 🎨🎬",
+      "hashtags": ["#CreatorLife", "#StudioTour", "#ContentCreation"],
+      "metadata": {
+        "type": "content",
+        "vibe": "quiet_storm",
+        "target_engagement": "medium"
+      }
+    },
+    {
+      "platforms": ["reminder"],
+      "datetime_utc": "2025-11-08T16:00:00Z",
+      "label": "💧 Hydration Check",
+      "video_filename": "",
+      "thumbnail_filename": "",
+      "caption": "Water. Now. Your brain is literally floating in water and you haven't had a sip in 3 hours. I know you.",
+      "hashtags": [],
+      "metadata": {
+        "type": "wellness",
+        "importance": "medium",
+        "sass_level": "high"
+      }
+    },
+    {
+      "platforms": ["tiktok"],
+      "datetime_utc": "2025-11-08T21:00:00Z",
+      "label": "✨ Evening Inspiration",
+      "video_filename": "you_are_loading.mp4",
+      "thumbnail_filename": "loading_thumb.jpg",
+      "caption": "You are not behind. You are loading. And babe, you're about to be legendary. 🌟",
+      "hashtags": ["#Motivation", "#SelfLove", "#MentalHealthMatters", "#YouGotThis"],
+      "metadata": {
+        "type": "content",
+        "vibe": "sensual_motivational",
+        "target_engagement": "viral"
+      }
+    },
+    {
+      "platforms": ["reminder"],
+      "datetime_utc": "2025-11-08T18:00:00Z",
+      "label": "🎤 Recording Session Reminder",
+      "video_filename": "",
+      "thumbnail_filename": "",
+      "caption": "You got 15 minutes till your recording session. Time to bring that neurodivergent revolution energy.",
+      "hashtags": [],
+      "metadata": {
+        "type": "calendar",
+        "importance": "high",
+        "sass_level": "low"
+      }
+    },
+    {
+      "platforms": ["clapper", "facebook"],
+      "datetime_utc": "2025-11-09T13:00:00Z",
+      "label": "🎨 Creative Process BTS",
+      "video_filename": "creative_chaos.mp4",
+      "thumbnail_filename": "chaos_thumb.jpg",
+      "caption": "This is what the creative process actually looks like. Messy. Beautiful. Perfectly imperfect. 🎭",
+      "hashtags": ["#CreativeProcess", "#BehindTheScenes", "#ArtistLife"],
+      "metadata": {
+        "type": "content",
+        "vibe": "powerful_bitch_energy",
+        "target_engagement": "high"
+      }
+    }
+  ]
+}
