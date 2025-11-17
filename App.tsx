@@ -6,7 +6,9 @@ import {
   Send,
   Box,
   Menu,
-  X
+  X,
+  Brain,
+  BookOpen
 } from 'lucide-react'
 import { GiovanniAvatar } from './GiovanniAvatar'
 import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from './GiovanniReminders'
@@ -14,9 +16,11 @@ import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
 import { GiovanniSocialMedia } from './GiovanniSocialMedia'
 import { GiovanniStudioOrganizer } from './GiovanniStudioOrganizer'
 import { GiuseppePanel } from './GiuseppePanel'
+import GiuseppeNotesTaker from './GiuseppeNotesTaker'
+import GiuseppeBook from './GiuseppeBook'
 import { Button } from './components/ui/button'
 
-type View = 'schedule' | 'photos' | 'social' | 'studio'
+type View = 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book'
 
 /**
  * Main Giovanni Skyrider Application
@@ -31,6 +35,8 @@ export default function App() {
 
   const navigation = [
     { id: 'schedule' as const, label: 'Schedule', icon: Calendar },
+    { id: 'notes' as const, label: 'Notes', icon: Brain },
+    { id: 'book' as const, label: 'The Book', icon: BookOpen },
     { id: 'photos' as const, label: 'Photos', icon: ImageIcon },
     { id: 'social' as const, label: 'Social Media', icon: Send },
     { id: 'studio' as const, label: 'Studio', icon: Box }
@@ -140,6 +146,10 @@ export default function App() {
                   <GiuseppePanel />
                 </div>
               )}
+
+              {currentView === 'notes' && <GiuseppeNotesTaker />}
+
+              {currentView === 'book' && <GiuseppeBook />}
 
               {currentView === 'photos' && (
                 <div className="space-y-6">
