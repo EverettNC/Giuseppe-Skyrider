@@ -80,6 +80,21 @@ Giovanni is not passive. He's **presence**. A screen-side force who reminds, mot
 - Giovanni's declutter advice
 - Real-time workspace insights
 
+### 🎵 Music Composition Studio
+- **Vocal Training**: Comprehensive warm-up exercises (lip trills, sirens, humming scales)
+- **Practice Timer**: Track your vocal practice sessions
+- **Songwriting Tools**:
+  - AI-powered lyric prompts and writing exercises
+  - Chord progressions with popular examples (I-V-vi-IV, ii-V-I, etc.)
+  - Genre-specific vibes and suggestions
+- **Singing Techniques**: Master breath support, posture, resonance, and pitch control
+- **Daily Practice Routine**: Structured 30-minute practice guide
+- **Motivation System**:
+  - Giovanni's music-specific motivational quotes
+  - Quick boost buttons for common struggles
+  - Daily affirmations for singers
+- **Learning Resources**: Curated recommendations for apps, YouTube channels, and practice tools
+
 ---
 
 ## 🧠 Tech Stack
@@ -131,6 +146,7 @@ Giuseppe-Skyrider/
 ├── GiovanniPhotoCurator.tsx     # Photo organization
 ├── GiovanniSocialMedia.tsx      # Social media manager
 ├── GiovanniStudioOrganizer.tsx  # Studio organizer
+├── GiovanniMusicStudio.tsx      # Music composition assistant
 ├── GiuseppePanel.tsx            # Schedule panel
 ├── GiuseppeScheduler.ts         # Schedule logic
 ├── components/
@@ -192,6 +208,7 @@ Edit `GiovanniPersonality.ts` to add your own quotes, greetings, and responses.
 - ✅ Photo curator
 - ✅ Social media manager
 - ✅ Studio organizer
+- ✅ Music composition studio with vocal training and songwriting tools
 
 ### Phase 2 (Coming Soon)
 - 🎤 Voice-activated recording: "Giovanni, start recording"

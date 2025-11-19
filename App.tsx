@@ -15,6 +15,7 @@ import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from '.
 import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
 import { GiovanniSocialMedia } from './GiovanniSocialMedia'
 import { GiovanniStudioOrganizer } from './GiovanniStudioOrganizer'
+import { GiovanniMusicStudio } from './GiovanniMusicStudio'
 import { GiuseppePanel } from './GiuseppePanel'
 import GiuseppeNotesTaker from './GiuseppeNotesTaker'
 import GiuseppeBook from './GiuseppeBook'
@@ -39,7 +40,8 @@ export default function App() {
     { id: 'book' as const, label: 'The Book', icon: BookOpen },
     { id: 'photos' as const, label: 'Photos', icon: ImageIcon },
     { id: 'social' as const, label: 'Social Media', icon: Send },
-    { id: 'studio' as const, label: 'Studio', icon: Box }
+    { id: 'studio' as const, label: 'Studio', icon: Box },
+    { id: 'music' as const, label: 'Music Studio', icon: Music }
   ]
 
   return (
@@ -184,6 +186,18 @@ export default function App() {
                     </p>
                   </div>
                   <GiovanniStudioOrganizer />
+                </div>
+              )}
+
+              {currentView === 'music' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">Music Composition Studio</h2>
+                    <p className="text-gray-400">
+                      Compose songs, train your voice, and unleash your musical genius
+                    </p>
+                  </div>
+                  <GiovanniMusicStudio />
                 </div>
               )}
             </motion.div>
