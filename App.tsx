@@ -6,17 +6,19 @@ import {
   Send,
   Box,
   Menu,
-  X
+  X,
+  Music
 } from 'lucide-react'
 import { GiovanniAvatar } from './GiovanniAvatar'
 import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from './GiovanniReminders'
 import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
 import { GiovanniSocialMedia } from './GiovanniSocialMedia'
 import { GiovanniStudioOrganizer } from './GiovanniStudioOrganizer'
+import { GiovanniMusicStudio } from './GiovanniMusicStudio'
 import { GiuseppePanel } from './GiuseppePanel'
 import { Button } from './components/ui/button'
 
-type View = 'schedule' | 'photos' | 'social' | 'studio'
+type View = 'schedule' | 'photos' | 'social' | 'studio' | 'music'
 
 /**
  * Main Giovanni Skyrider Application
@@ -33,7 +35,8 @@ export default function App() {
     { id: 'schedule' as const, label: 'Schedule', icon: Calendar },
     { id: 'photos' as const, label: 'Photos', icon: ImageIcon },
     { id: 'social' as const, label: 'Social Media', icon: Send },
-    { id: 'studio' as const, label: 'Studio', icon: Box }
+    { id: 'studio' as const, label: 'Studio', icon: Box },
+    { id: 'music' as const, label: 'Music Studio', icon: Music }
   ]
 
   return (
@@ -174,6 +177,18 @@ export default function App() {
                     </p>
                   </div>
                   <GiovanniStudioOrganizer />
+                </div>
+              )}
+
+              {currentView === 'music' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">Music Composition Studio</h2>
+                    <p className="text-gray-400">
+                      Compose songs, train your voice, and unleash your musical genius
+                    </p>
+                  </div>
+                  <GiovanniMusicStudio />
                 </div>
               )}
             </motion.div>
