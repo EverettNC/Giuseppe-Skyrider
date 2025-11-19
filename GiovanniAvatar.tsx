@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Volume2, VolumeX, MessageCircle } from 'lucide-react'
+import { Sparkles, Volume2, VolumeX, MessageCircle, PenLine } from 'lucide-react'
 import { useGiovanniStore } from './GiovanniStore'
+import { useNotesStore } from './GiuseppeNotesStore'
 
 export function GiovanniAvatar() {
   const {
@@ -12,6 +13,8 @@ export function GiovanniAvatar() {
     toggleVoice,
     setVisible
   } = useGiovanniStore()
+
+  const { isAutoNote, isRecording } = useNotesStore()
 
   if (!isVisible) {
     return (
@@ -97,6 +100,44 @@ export function GiovanniAvatar() {
             <VolumeX className="w-4 h-4 text-gray-500" />
           )}
         </motion.button>
+
+        {/* Note-taking indicator */}
+        <AnimatePresence>
+          {(isAutoNote || isRecording) && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute -bottom-2 -left-2"
+            >
+              <motion.div
+                animate={{
+                  rotate: [0, -10, 10, -10, 0],
+                  scale: isRecording ? [1, 1.1, 1] : 1,
+                }}
+                transition={{
+                  rotate: { duration: 2, repeat: Infinity },
+                  scale: { duration: 0.5, repeat: Infinity }
+                }}
+                className={`w-8 h-8 rounded-full ${
+                  isRecording
+                    ? 'bg-gradient-to-br from-red-500 to-pink-500'
+                    : 'bg-gradient-to-br from-green-500 to-emerald-500'
+                } border-2 border-gray-700 flex items-center justify-center shadow-lg`}
+              >
+                <PenLine className="w-4 h-4 text-white" />
+              </motion.div>
+              {isRecording && (
+                <motion.div
+                  initial={{ scale: 1, opacity: 0.7 }}
+                  animate={{ scale: 1.8, opacity: 0 }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="absolute inset-0 rounded-full bg-red-500 -z-10"
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Message bubble */}

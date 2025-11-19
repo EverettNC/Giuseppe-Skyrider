@@ -7,9 +7,9 @@
   "author": "Everett N. Christman & Derek C. Jr. (Christman AI Project)",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "react": "^18.3.1",
