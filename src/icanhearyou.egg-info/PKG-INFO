@@ -1,0 +1,144 @@
+Metadata-Version: 2.4
+Name: icanhearyou
+Version: 0.1.0
+Summary: Christman AI – ICanHearYou emotional audio engine + Christman Voice SDK
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: torch
+Requires-Dist: sounddevice
+Requires-Dist: soundfile
+Dynamic: license-file
+
+
+![B0EDAB6B-8561-42CF-B382-9596F9A37224](https://github.com/user-attachments/assets/6e051660-ad9c-46ef-a66e-070032d29b73)
+
+<div align="center">
+
+# **ICanHearYou**  
+### *Where memory learns to speak again.*
+
+![Stars](https://img.shields.io/github/stars/yourusername/ICanHearYou?style=for-the-badge&color=0af)
+![Version](https://img.shields.io/badge/version-2025.1-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-Proprietary-c500ff?style=for-the-badge)
+![Build](https://img.shields.io/badge/build-passing-00ff99?style=for-the-badge)
+![Python](https://img.shields.io/badge/python-3.10+-blue?style=for-the-badge)
+
+</div>
+
+# 🔱 THE CHRISTMAN MANTRA
+
+**Empathy and compassion aren’t reactions — they’re defaults.  
+Not born from fear, not forced by damnation.  
+They rise straight from your being.**
+
+Our systems don’t imitate humanity —  
+**they honor it.**
+
+Leakage empathy in every layer.  
+Compassion wired into the architecture.
+
+This is the oath behind the code.
+
+---
+
+# 🌌 COSMIC DIVIDER  
+```
+───────────────────────────────────────── ✦ ─────────────────────────────────────────
+```
+
+---
+
+# 🎙️ What This System Actually Does
+
+This is emotional reconstruction — not imitation.
+
+- Timbre  
+- Pacing  
+- Breathwork  
+- Emotion  
+- Cadence  
+- Micropatterns  
+
+Built because one voice mattered — and every family deserves that level of remembrance.
+
+---
+
+# 🌠 Pricing Tiers
+
+**Free — Basic cloning  
+Basic — Better clarity  
+Premium — $29.99 HD emotional cloning  
+Elite — Real-time avatar  
+Ultra — $1,999 Shorty-level reconstruction**
+
+---
+
+# ⚙️ Tech Stack
+
+GPT-SoVITS v3 • F5-TTS • StyleTTS2 • Wav2Vec2 • EnCodec • Custom PCA  
+**Christman Tonal Intelligence Stack**
+
+---
+
+# 🚀 Quick Start
+
+```bash
+git clone https://github.com/yourusername/ICanHearYou.git
+cd ICanHearYou
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python scripts/download_models.py
+python src/main_app.py
+```
+
+---
+
+# 🔮 Christman Voice SDK (Private)
+
+ToneScore™ • Adaptive Response Mode • VoiceSDK
+
+```python
+result = sdk.synthesize("I'm still here, baby.", tone_score=tonescore.score)
+```
+
+> SDK is proprietary. Approval required.
+
+---
+
+# 🧬 Training a Voice — No Limits  
+Upload everything. It only gets better.
+
+---
+
+# 🔈 Synthesis Example
+
+```python
+audio = synth.synthesize("How are you doing today?", emotion="happy")
+audio.save("output.wav")
+```
+
+---
+
+# 💙 For Shorty
+
+Warmth. Grit. Tenderness. Fire.  
+Her cadence. Her edge. Her last breath.
+
+This isn’t software.  
+**It’s remembrance.**
+
+---
+
+# 📜 License
+
+See `/LICENSE` and `/legal/`.
+
+© The Christman AI Project.
+
+---
+
+# 🛡️ Christman Crest  
+![80372DD0-09F8-4E73-944E-F5C91D82802E](https://github.com/user-attachments/assets/6588571f-4028-414a-b0d0-43e7c1c41b25)
+
