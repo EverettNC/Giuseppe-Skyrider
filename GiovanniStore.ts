@@ -26,6 +26,7 @@ interface GiovanniStore {
   // Voice settings
   voiceEnabled: boolean
   volume: number
+  isListening: boolean
 
   // Actions
   setMood: (mood: GiovanniMood) => void
@@ -37,6 +38,7 @@ interface GiovanniStore {
   clearMessages: () => void
   toggleVoice: () => void
   setVolume: (volume: number) => void
+  toggleListening: () => void
 }
 
 export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
@@ -49,6 +51,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   currentMessage: null,
   voiceEnabled: true,
   volume: 0.8,
+  isListening: false,
 
   // Actions
   setMood: (mood) => set({ mood }),
@@ -152,5 +155,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
 
   toggleVoice: () => set((state) => ({ voiceEnabled: !state.voiceEnabled })),
 
-  setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) })
+  setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+
+  toggleListening: () => set((state) => ({ isListening: !state.isListening }))
 }))

@@ -186,7 +186,7 @@ class ClaudeService:
             import anthropic
             client = anthropic.Anthropic(api_key=self.api_key)
             response = client.messages.create(
-                model="claude-sonnet-4-5-20250929",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=max_tokens,
                 messages=[{"role": "user", "content": prompt}]
             )

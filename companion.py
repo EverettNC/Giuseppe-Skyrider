@@ -120,7 +120,7 @@ class DigitalCompanion:
         
         if use_anthropic and HAS_ANTHROPIC:
             self.client = Anthropic(api_key=api_key)
-            self.model = "claude-sonnet-4-5-20250929"
+            self.model = "claude-3-5-sonnet-20241022"
         elif HAS_OPENAI:
             self.client = OpenAI(api_key=api_key)
             self.model = "gpt-4o"

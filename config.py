@@ -132,7 +132,7 @@ class Config:
         Args:
             config_path: Path to YAML config file. If None, uses default.
         """
-        self.root_dir = Path(__file__).parent.parent.parent
+        self.root_dir = Path(__file__).parent
         self.config_path = config_path or self.root_dir / "config" / "default_config.yaml"
         
         # Load config from YAML

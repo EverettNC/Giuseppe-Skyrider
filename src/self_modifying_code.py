@@ -207,7 +207,7 @@ class AICodeGenerator:
     def __init__(self):
         self.api_key = ANTHROPIC_API_KEY
         self.api_endpoint = "https://api.anthropic.com/v1/messages"
-        self.model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+        self.model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
         # Christman Autonomy Engine's Learning System - builds independence over time
         self.learning_enabled = True

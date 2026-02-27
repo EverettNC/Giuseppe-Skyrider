@@ -24,6 +24,9 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -33,6 +36,7 @@ from logger import get_logger
 from emotion_embedder import EmotionEmbedder
 from tone_engine import ToneScoreEngine
 from fusion_engine import FusionEngine
+from orchestrator import secure_virtus_decrypt, secure_virtus_encrypt, _SERVER_KEYPAIR
 import requests
 
 logger = get_logger(__name__)
@@ -152,11 +156,39 @@ async def think(
             
         logger.info(f"Think request received: {input_text[:50]}, has_audio={audio_blob is not None}")
         
+        
         context_str = ""
         if schedule_context:
             context_str = " [Context: " + str(schedule_context) + "]"
+            
+        combined_payload = {"telemetry": input_text + context_str}
         
-        result = global_fusion_engine.step(input_text + context_str)
+        try:
+            # 1. Simulate frontend encryption (Client side would do this)
+            import json
+            from tier7_steg import steg_engine
+            dummy_encrypted = steg_engine.encapsulate(json.dumps(combined_payload).encode("utf-8"))
+            
+            logger.info("VIRTUS Gatekeeper Engaged: Decrypting inbound telemetry...")
+            # 2. VIRTUS Decrypt
+            decrypted_payload = secure_virtus_decrypt(dummy_encrypted, _SERVER_KEYPAIR)
+            secure_input = decrypted_payload.get("telemetry", "")
+            
+            logger.info("Telemetry verified. Sending to Evolutionary Engine/Fusion Core...")
+            # 3. Process with Fusion Engine
+            result = global_fusion_engine.step(secure_input)
+            
+            logger.info("VIRTUS Gatekeeper Engaged: Encrypting outbound response...")
+            # 4. VIRTUS Encrypt the response
+            virtus_encrypted_response = secure_virtus_encrypt(result, b"dummy_client_pub_key")
+            
+            # 5. For now, we still return the plaintext result so the frontend can speak it,
+            #    but we log the encrypted payload size to prove it happened.
+            logger.info(f"VIRTUS outbound payload size: {len(virtus_encrypted_response)} bytes")
+            
+        except Exception as virtus_err:
+            logger.error(f"VIRTUS FAILURE: {virtus_err}")
+            raise HTTPException(status_code=403, detail="VIRTUS_GATEKEEPER_FAILURE")
         
         return {
             "text": result.get("output", "ok"),

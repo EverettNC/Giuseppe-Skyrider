@@ -8,9 +8,18 @@ import {
   Menu,
   X,
   Brain,
-  BookOpen
+  BookOpen,
+  Music,
+  Smartphone,
+  LayoutDashboard,
+  Mic,
+  MicOff
 } from 'lucide-react'
+import { useGiovanniStore } from './GiovanniStore'
 import { GiovanniAvatar } from './GiovanniAvatar'
+import { GiovanniMobileCompanion } from './GiovanniMobileCompanion'
+import { GiovanniAnalyticsDashboard } from './GiovanniAnalyticsDashboard'
+import { GiovanniCommandCenter } from './GiovanniCommandCenter'
 import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from './GiovanniReminders'
 import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
 import { GiovanniSocialMedia } from './GiovanniSocialMedia'
@@ -21,7 +30,7 @@ import GiuseppeNotesTaker from './GiuseppeNotesTaker'
 import GiuseppeBook from './GiuseppeBook'
 import { Button } from './components/ui/button'
 
-type View = 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book'
+type View = 'dashboard' | 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book' | 'music' | 'mobile'
 
 /**
  * Main Giovanni Skyrider Application
@@ -29,19 +38,22 @@ type View = 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book'
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('schedule')
   const [menuOpen, setMenuOpen] = useState(false)
+  const { isListening, toggleListening } = useGiovanniStore()
 
   // Initialize Giovanni's proactive features
   useMorningMotivation()
   useHydrationReminder()
 
   const navigation = [
+    { id: 'dashboard' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'schedule' as const, label: 'Schedule', icon: Calendar },
     { id: 'notes' as const, label: 'Notes', icon: Brain },
     { id: 'book' as const, label: 'The Book', icon: BookOpen },
     { id: 'photos' as const, label: 'Photos', icon: ImageIcon },
     { id: 'social' as const, label: 'Social Media', icon: Send },
     { id: 'studio' as const, label: 'Studio', icon: Box },
-    { id: 'music' as const, label: 'Music Studio', icon: Music }
+    { id: 'music' as const, label: 'Music Studio', icon: Music },
+    { id: 'mobile' as const, label: 'Pocket', icon: Smartphone }
   ]
 
   return (
@@ -66,7 +78,17 @@ export default function App() {
               </div>
 
               {/* Desktop navigation */}
-              <nav className="hidden md:flex gap-2">
+              <nav className="hidden md:flex gap-2 items-center">
+                <Button
+                  variant={isListening ? 'default' : 'outline'}
+                  onClick={toggleListening}
+                  size="sm"
+                  className={isListening ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 mr-2" : "text-gray-400 border-gray-700 hover:text-white mr-2"}
+                  title={isListening ? "Giovanni is listening (Wake Word Active)" : "Giovanni is asleep (Mic Off)"}
+                >
+                  {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
+                  {isListening ? 'Listening' : 'Mic Off'}
+                </Button>
                 {navigation.map((item) => {
                   const Icon = item.icon
                   return (
@@ -102,6 +124,15 @@ export default function App() {
                   className="md:hidden overflow-hidden"
                 >
                   <div className="flex flex-col gap-2 pt-4">
+                    <Button
+                      variant={isListening ? 'default' : 'outline'}
+                      onClick={toggleListening}
+                      size="sm"
+                      className={`w-full justify-start mb-2 ${isListening ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20" : "text-gray-400 border-gray-700 hover:text-white"}`}
+                    >
+                      {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
+                      {isListening ? 'Wake Word: Listening' : 'Wake Word: Off'}
+                    </Button>
                     {navigation.map((item) => {
                       const Icon = item.icon
                       return (
@@ -137,6 +168,18 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
+              {currentView === 'dashboard' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+                      <LayoutDashboard className="w-8 h-8 text-giovanni-accent" />
+                      Command Dashboard
+                    </h2>
+                  </div>
+                  <GiovanniAnalyticsDashboard />
+                </div>
+              )}
+
               {currentView === 'schedule' && (
                 <div className="space-y-6">
                   <div>
@@ -200,6 +243,18 @@ export default function App() {
                   <GiovanniMusicStudio />
                 </div>
               )}
+
+              {currentView === 'mobile' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+                      <Smartphone className="w-8 h-8 text-giovanni-accent" />
+                      Giovanni Pocket Sync
+                    </h2>
+                  </div>
+                  <GiovanniMobileCompanion />
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -222,6 +277,9 @@ export default function App() {
 
       {/* Giovanni Reminders - runs in background */}
       <GiovanniReminders />
+
+      {/* Giovanni Command Center - runs in background for voice activation */}
+      <GiovanniCommandCenter />
     </div>
   )
 }
