@@ -14,7 +14,7 @@ from typing import Optional, Dict
 import time
 import warnings
 
-from .base_synthesizer import BaseSynthesizer, SynthesisResult
+from ..vocal_engine import BaseSynthesizer, SynthesisResult
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)

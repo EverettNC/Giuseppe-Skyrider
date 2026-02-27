@@ -12,19 +12,22 @@ Architecture:
 
 This is the philosophical foundation of ICanHearYou voice synthesis.
 """
-
 from __future__ import annotations
 import math
-import random
-import json
-import statistics
 import re
-from typing import List, Dict, Tuple
 import threading
-from logger import get_logger
+import json
+import logging
+import os
+import random
+import statistics
+from typing import Dict, List, Any, Optional, Tuple
+import numpy as np
+from datetime import datetime
+
 from evolutionary_engine import EvolutionaryAI
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 random.seed(42)
 

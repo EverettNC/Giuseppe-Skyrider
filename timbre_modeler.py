@@ -316,7 +316,7 @@ class TimbreModeler:
             Voice quality metrics
         """
         # Use existing ToneScore engine for these metrics
-        from tonescore_engine import ToneScoreEngine
+        from tone_engine import ToneScoreEngine
         
         hnr_values = []
         jitter_values = []

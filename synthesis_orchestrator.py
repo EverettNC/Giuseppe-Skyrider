@@ -15,7 +15,7 @@ from voicepack import VoicepackBuilder, VoicepackMetadata
 from timbre_modeler import TimbreModeler, VoiceProfile
 from emotion_embedder import EmotionEmbedder
 from gpt_sovits_engine import GPTSoVITSEngine
-from tonescore_engine import ToneScoreEngine
+from tone_engine import ToneScoreEngine
 from config import Config, Tier, get_config
 from logger import get_logger
 

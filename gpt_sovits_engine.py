@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import time
 
-from .base_synthesizer import BaseSynthesizer, SynthesisResult
+from ..vocal_engine import BaseSynthesizer, SynthesisResult
 from logger import get_logger
 
 logger = get_logger(__name__)

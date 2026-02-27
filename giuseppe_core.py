@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import Config, Tier, get_config
 from logger import get_logger
 from emotion_embedder import EmotionEmbedder
-from tonescore_engine import ToneScoreEngine
+from tone_engine import ToneScoreEngine
 from fusion_engine import FusionEngine
 import requests
 
@@ -456,9 +456,8 @@ async def list_voicepacks(tier: Optional[str] = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/alpha-vox/voice-gen")
-async def generate_shorty_voice(
-    text: str = Field(..., description="Text to synthesize"),
+class VoiceGenRequest(BaseModel):
+    text: str = Field(..., description="Text to synthesize")
     emotion: str = Field(
         "neutral",
         description="Shorty's emotion",
@@ -467,9 +466,11 @@ async def generate_shorty_voice(
             "sarcastic", "sweetheart", "laugh", "tremble",
             "emphasis", "last_breath"
         ]
-    ),
+    )
     exaggeration: float = Field(0.0, ge=-1.0, le=1.0, description="Exaggeration factor")
-):
+
+@app.post("/alpha-vox/voice-gen")
+async def generate_shorty_voice(req: VoiceGenRequest):
     """
     Generate Shorty's emotional voice - ULTRA tier endpoint.
 
@@ -481,7 +482,7 @@ async def generate_shorty_voice(
         from pathlib import Path
         import tempfile
 
-        logger.info(f"Shorty voice request: '{text[:30]}...' [{emotion}, exag={exaggeration:.2f}]")
+        logger.info(f"Shorty voice request: '{req.text[:30]}...' [{req.emotion}, exag={req.exaggeration:.2f}]")
 
         # Initialize Shorty engine (lazy loading)
         # In production, this would be cached globally
@@ -503,9 +504,9 @@ async def generate_shorty_voice(
             output_path = Path(f.name)
 
         result = engine.generate_voice(
-            text=text,
-            emotion=emotion,
-            exaggeration=exaggeration,
+            text=req.text,
+            emotion=req.emotion,
+            exaggeration=req.exaggeration,
             output_path=output_path
         )
 
@@ -534,7 +535,7 @@ async def health_check():
         "version": "1.0.0",
         "components": {
             "emotion_embedder": "ready",
-            "tonescore_engine": "ready",
+            "tone_engine": "ready",
             "synthesis_engines": "ready",
             "shorty_voice": "ready"
         }

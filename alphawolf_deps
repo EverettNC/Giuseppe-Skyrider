@@ -1,0 +1,7 @@
+digraph {
+	AlphaWolf [label="Core Build"]
+	AlphaWolf -> core
+	AlphaWolf -> ui
+	AlphaWolf -> api
+	AlphaWolf -> data
+}
