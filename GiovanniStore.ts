@@ -33,7 +33,7 @@ interface GiovanniStore {
   setVisible: (visible: boolean) => void
   setPosition: (position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left') => void
   addMessage: (text: string, mood: GiovanniMood) => void
-  speak: (text: string, mood: GiovanniMood) => void
+  speak: (text: string, mood: GiovanniMood) => Promise<void>
   clearMessages: () => void
   toggleVoice: () => void
   setVolume: (volume: number) => void
@@ -73,7 +73,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
     }))
   },
 
-  speak: (text, mood) => {
+  speak: async (text, mood) => {
     const message: GiovanniMessage = {
       id: `${Date.now()}-${Math.random()}`,
       text,
@@ -90,23 +90,56 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
     }))
 
     // Trigger voice synthesis if enabled
-    if (get().voiceEnabled && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.volume = get().volume
-      utterance.rate = 0.95
-      utterance.pitch = 0.9
+    if (get().voiceEnabled) {
+      try {
+        const response = await fetch('http://localhost:8001/api/speak', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+            tonescore: 80.0 // Default ToneScore parameter
+          })
+        });
 
-      utterance.onend = () => {
-        set({ state: 'idle' })
-        // Mark as spoken
+        if (!response.ok) {
+          throw new Error(`Speech synthesis failed: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.volume = get().volume;
+
+        audio.onended = () => {
+          set({ state: 'idle' })
+          // Mark as spoken
+          set((state) => ({
+            messages: state.messages.map(m =>
+              m.id === message.id ? { ...m, spoken: true } : m
+            )
+          }))
+          URL.revokeObjectURL(url);
+        };
+
+        await audio.play();
+      } catch (err) {
+        console.error('Audio playback failed:', err);
+        set({ state: 'idle' });
+        // Fallback visible string
+        const fallbackMsg: GiovanniMessage = {
+          id: `error-${Date.now()}`,
+          text: "[SILICON FAILURE]: Synthesis offline or keys missing. Please check .env",
+          mood: 'sassy',
+          timestamp: new Date(),
+          spoken: true
+        };
         set((state) => ({
-          messages: state.messages.map(m =>
-            m.id === message.id ? { ...m, spoken: true } : m
-          )
-        }))
+          messages: [...state.messages, fallbackMsg],
+          currentMessage: fallbackMsg
+        }));
       }
-
-      window.speechSynthesis.speak(utterance)
     } else {
       // If voice is disabled, just show the message briefly
       setTimeout(() => {

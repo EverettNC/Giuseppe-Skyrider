@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,14 +6,19 @@ import { Switch } from "@/components/ui/switch";
 import { getAllTasks, getCurrentTask, getUpcomingTasks, TaskEntry } from "./GiuseppeScheduler";
 import { useGiovanniStore } from "./GiovanniStore";
 import { giovanni } from "./GiovanniPersonality";
-import { Calendar, Mic, MicOff, Clock, Pill, Zap } from "lucide-react";
+import { Calendar, Mic, MicOff, Clock, Pill, Zap, Loader2 } from "lucide-react";
 
 export function GiuseppePanel() {
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
   const [recording, setRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [actionState, setActionState] = useState<"idle" | "adapting">("idle");
   const [currentTask, setCurrentTask] = useState<TaskEntry | null>(null);
   const [upcomingTasks, setUpcomingTasks] = useState<TaskEntry[]>([]);
   const { speak } = useGiovanniStore();
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
   useEffect(() => {
     loadAllTasks();
@@ -37,18 +42,104 @@ export function GiuseppePanel() {
     }
   };
 
-  const toggleRecording = () => {
-    setRecording(!recording);
+  const handleExecuteAction = async () => {
+    try {
+      const response = await fetch('http://localhost:8001/api/execute_action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action_id: currentTask?.label || "general_action" })
+      });
+      if (response.ok) {
+        speak("Action confirmed. Adapting my confidence weights positively.", "hype");
+      }
+    } catch (error) {
+      console.error("Execute action failed:", error);
+    }
+  };
 
+  const handleDenyAction = async () => {
+    setActionState("adapting");
+    try {
+      const response = await fetch('http://localhost:8001/api/deny_action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action_id: currentTask?.label || "general_action" })
+      });
+      if (response.ok) {
+        // Suppress terminal proposals, adopt caution
+        speak("Understood. Imposing stricter boundaries. Adjusting my neural weights.", "caring");
+      }
+    } catch (error) {
+      console.error("Deny action failed:", error);
+    } finally {
+      setTimeout(() => setActionState("idle"), 3000);
+    }
+  };
+
+  const toggleRecording = async () => {
     if (!recording) {
-      // Starting recording
-      speak("Recording started. Let that creative flow happen.", "swagger");
-      // TODO: Integrate Web Audio / MediaRecorder here
-      console.log("Starting recording...");
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        chunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          setIsProcessing(true);
+
+          try {
+            const formData = new FormData();
+            formData.append('audio_blob', blob, 'recording.webm');
+
+            if (currentTask) {
+              formData.append('schedule_context', JSON.stringify(currentTask));
+            }
+
+            const response = await fetch('http://localhost:8001/api/think', {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!response.ok) {
+              throw new Error(`Think API failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // Speak the response text
+            if (data.text) {
+              speak(data.text, "swagger");
+            }
+          } catch (error) {
+            console.error("Failed to process recording:", error);
+            speak("Sorry, my silicon brain had a hiccup.", "sassy");
+          } finally {
+            setIsProcessing(false);
+            stream.getTracks().forEach(track => track.stop());
+          }
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
+        speak("Recording started. Let that creative flow happen.", "swagger");
+        console.log("Starting recording...");
+      } catch (err) {
+        console.error("Microphone access denied:", err);
+        speak("I need microphone access to hear you.", "sassy");
+      }
     } else {
-      // Stopping recording
-      speak("Recording stopped. That was fire. Want me to summarize it?", "hype");
-      console.log("Stopping recording...");
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        setRecording(false);
+        console.log("Stopping recording...");
+      }
     }
   };
 
@@ -108,7 +199,9 @@ export function GiuseppePanel() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {recording ? (
+              {isProcessing ? (
+                <Loader2 className="w-5 h-5 text-giovanni-accent animate-spin" />
+              ) : recording ? (
                 <Mic className="w-5 h-5 text-red-500 animate-pulse" />
               ) : (
                 <MicOff className="w-5 h-5 text-gray-500" />
@@ -116,12 +209,42 @@ export function GiuseppePanel() {
               <div>
                 <span className="font-medium block">Voice Recording</span>
                 <span className="text-xs text-gray-400">
-                  {recording ? "Recording in progress..." : "Ready to record"}
+                  {isProcessing ? "Silicon is thinking..." : recording ? "Recording in progress..." : "Ready to record"}
                 </span>
               </div>
             </div>
-            <Switch checked={recording} onCheckedChange={toggleRecording} />
+            <Switch checked={recording} onCheckedChange={toggleRecording} disabled={isProcessing} />
           </div>
+
+          {/* Action Approval / Denial */}
+          <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col gap-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-400">Carbon Approval Protocol</span>
+              {actionState === "adapting" && (
+                <span className="text-xs text-yellow-400 animate-pulse font-mono flex items-center gap-2">
+                  <Zap className="w-3 h-3" />
+                  Silicon adapting to Carbon boundary...
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
+                onClick={handleExecuteAction}
+              >
+                [EXECUTE ACTION]
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                onClick={handleDenyAction}
+              >
+                [DENY ACTION]
+              </Button>
+            </div>
+          </div>
+
         </CardContent>
       </Card>
 

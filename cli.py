@@ -18,7 +18,7 @@ import sys
 import json
 
 from src import VoiceSynthesisOrchestrator, Tier, get_logger
-from src.core.voicepack import VoicepackMetadata
+from voicepack import VoicepackMetadata
 
 logger = get_logger(__name__)
 
