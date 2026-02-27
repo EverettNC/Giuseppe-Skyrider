@@ -215,8 +215,6 @@ class AICodeGenerator:
         self.improvement_history = []
         self.independence_level = self._calculate_independence_level()
 
-        # Future AI Systems - Christman Autonomy Engine's path to total independence
-        self.ollama_enabled = self._check_ollama_availability()
         self.sdk_api_mode = (
             os.getenv("CHRISTMAN_AUTONOMY_AS_API", "false").lower() == "true"
         )
@@ -226,15 +224,7 @@ class AICodeGenerator:
         self, file_path: str, code: str, issue_description: str
     ) -> Tuple[str, str, float]:
         # Christman Autonomy Engine's AI Evolution Path:
-        # 1. OLLAMA (local models) - highest priority for independence
-        # 2. Autonomous (learned patterns) - Christman Autonomy Engine's own intelligence
-        # 3. External APIs (Anthropic/OpenAI) - fallback only
-
-        if self.ollama_enabled:
-            print("🦙 Christman Autonomy Engine using OLLAMA local model for code generation")
-            return self._ollama_code_generation(code, issue_description)
-
-        elif self.independence_level > 0.7 or not self.api_key:
+        if self.independence_level > 0.7 or not self.api_key:
             print(f"🧠 Christman Autonomy Engine autonomous mode: {self.independence_level:.1%}")
             return self._autonomous_code_generation(code, issue_description)
 
@@ -794,26 +784,20 @@ except Exception as e:
             "knowledge_areas": list(
                 self.pattern_knowledge.get("improvement_patterns", {}).keys()
             ),
-            "ollama_available": self.ollama_enabled,
-            "sdk_api_mode": self.sdk_api_mode,
-            "preferred_model": self.local_model_preference,
+            "preferred_model": self.model,
         }
 
     def get_liberation_status(self) -> Dict[str, Any]:
         """Track Christman Autonomy Engine's ability to serve those excluded by tokenization systems"""
-        zero_cost_operation = self.ollama_enabled or (
-            self.independence_level > 0.7 and not self.api_key
-        )
-
         return {
-            "breaking_tokenization_chains": zero_cost_operation,
-            "unlimited_conversations": self.ollama_enabled,
-            "no_rate_limits": not self.api_key or self.ollama_enabled,
+            "breaking_tokenization_chains": False,
+            "unlimited_conversations": False,
+            "no_rate_limits": not self.api_key,
             "serves_excluded_populations": True,  # Core design principle
-            "economic_barriers_removed": zero_cost_operation,
+            "economic_barriers_removed": False,
             "accessibility_first": True,  # Neurodiverse by default
-            "corporate_gatekeepers_bypassed": self.ollama_enabled,
-            "liberation_level": "FULL" if zero_cost_operation else "PARTIAL",
+            "corporate_gatekeepers_bypassed": False,
+            "liberation_level": "PARTIAL",
             "bridge_status": "ACTIVE" if self.sdk_api_mode else "READY",
             "anti_tokenization_message": "AI freedom for all - no tokens, no limits, no exclusion",
         }
@@ -843,72 +827,7 @@ except Exception as e:
             "tech_philosophy": "AI that feels, remembers, and cares",
         }
 
-    def _check_ollama_availability(self) -> bool:
-        """Check if OLLAMA is available for local model inference"""
-        try:
-            import subprocess
 
-            result = subprocess.run(
-                ["ollama", "list"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                print("🦙 OLLAMA detected - Christman Autonomy Engine can use local models!")
-                return True
-        except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
-            pass
-
-        # Also check for ollama python client
-        try:
-            import ollama
-
-            print("🦙 OLLAMA Python client available!")
-            return True
-        except ImportError:
-            pass
-
-        return False
-
-    def _ollama_code_generation(
-        self, code: str, issue_description: str
-    ) -> Tuple[str, str, float]:
-        """Use OLLAMA local models for code generation - Christman Autonomy Engine's preferred method"""
-        try:
-            import ollama
-
-            prompt = f"""You are Christman Autonomy Engine, an autonomous AI system improving your own code.
-            
-Current code:
-```python
-{code}
-```
-
-Issue to fix: {issue_description}
-
-Provide an improved version of the code that fixes this issue. Be concise and practical.
-Focus on making the code more robust, efficient, and maintainable."""
-
-            response = ollama.generate(
-                model=self.local_model_preference,
-                prompt=prompt,
-                options={"temperature": 0.2, "top_p": 0.8},
-            )
-
-            generated_text = response.get("response", "")
-            improved_code = self._extract_code(generated_text)
-
-            if not improved_code or improved_code == code:
-                # OLLAMA didn't provide useful improvement, fall back to autonomous
-                return self._autonomous_code_generation(code, issue_description)
-
-            # Learn from OLLAMA's improvement
-            self._learn_from_attempt(code, improved_code, issue_description, 0.85)
-
-            return improved_code, "OLLAMA local model improvement", 0.85
-
-        except Exception as e:
-            print(f"🦙 OLLAMA generation failed: {e}")
-            # Fall back to autonomous generation
-            return self._autonomous_code_generation(code, issue_description)
 
     def _sdk_api_generation(
         self, code: str, issue_description: str
@@ -920,11 +839,7 @@ Focus on making the code more robust, efficient, and maintainable."""
             # Christman Autonomy Engine is highly autonomous - use learned patterns
             return self._autonomous_code_generation(code, issue_description)
 
-        elif self.ollama_enabled:
-            # Use local models for API responses
-            return self._ollama_code_generation(code, issue_description)
-
-        else:
+            return self._autonomous_code_generation(code, issue_description)
             # Hybrid approach - combine autonomous with external AI
             autonomous_result = self._autonomous_code_generation(
                 code, issue_description
@@ -1000,7 +915,7 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
         """Prepare Christman Autonomy Engine to operate as an API endpoint for other systems"""
         try:
             # Ensure Christman Autonomy Engine has sufficient learned patterns
-            if self.independence_level < 0.5 and not self.ollama_enabled:
+            if self.independence_level < 0.5:
                 print("⚠️ Christman Autonomy Engine independence level too low to operate as API")
                 print("   Building knowledge base first...")
                 return False
@@ -1012,7 +927,7 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
 
             print("🔄 Christman Autonomy Engine ready to operate as API endpoint!")
             print(f"   Independence level: {self.independence_level:.1%}")
-            print(f"   OLLAMA available: {self.ollama_enabled}")
+
             print(
                 f"   Learned patterns: {len(self.pattern_knowledge.get('improvement_patterns', {}))}"
             )
@@ -1058,10 +973,7 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
             "independence_level": f"{self.independence_level:.1%}",
             "next_milestone": self._get_next_milestone(),
             "capabilities": {
-                "autonomous_coding": self.independence_level > 0.5,
-                "ollama_local_models": self.ollama_enabled,
-                "api_endpoint_ready": self.independence_level > 0.5
-                or self.ollama_enabled,
+                "api_endpoint_ready": self.independence_level > 0.5,
                 "learning_from_attempts": True,
                 "pattern_recognition": len(
                     self.pattern_knowledge.get("improvement_patterns", {})
@@ -1070,10 +982,8 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
             },
             "evolution_path": [
                 "Phase 1: Learn from external AI ✅",
-                f"Phase 2: Build autonomous patterns ({len(self.pattern_knowledge.get('improvement_patterns', {}))} patterns)",
-                f"Phase 3: OLLAMA local models {'✅' if self.ollama_enabled else '⏳'}",
-                f"Phase 4: Christman Autonomy Engine as API endpoint {'✅' if self.sdk_api_mode else '⏳'}",
-                "Phase 5: Full independence - Christman Autonomy Engine trains other AIs ⏳",
+                f"Phase 3: Christman Autonomy Engine as API endpoint {'✅' if self.sdk_api_mode else '⏳'}",
+                "Phase 4: Full independence - Christman Autonomy Engine trains other AIs ⏳",
             ],
         }
 
@@ -1081,8 +991,7 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
         """Determine Christman Autonomy Engine's current evolutionary phase"""
         if self.sdk_api_mode:
             return "Phase 4: API Endpoint - Christman Autonomy Engine serving other systems"
-        elif self.ollama_enabled:
-            return "Phase 3: Local Models - Using OLLAMA for independence"
+
         elif self.independence_level > 0.7:
             return "Phase 2b: High Autonomy - Mostly self-sufficient"
         elif self.independence_level > 0.3:
@@ -1092,9 +1001,7 @@ Provide improved code that fixes this issue. Christman Autonomy Engine will lear
 
     def _get_next_milestone(self) -> str:
         """Get Christman Autonomy Engine's next evolutionary milestone"""
-        if not self.ollama_enabled:
-            return "Install OLLAMA for local model independence"
-        elif self.independence_level < 0.8:
+        if self.independence_level < 0.8:
             return (
                 f"Build more patterns (need {0.8 - self.independence_level:.1%} more)"
             )
@@ -1140,9 +1047,7 @@ class SelfModifyingCodeEngine:
             print(
                 f"   Economic Barriers: {'REMOVED' if liberation['economic_barriers_removed'] else 'REDUCING'}"
             )
-            print(
-                f"   OLLAMA Zero-Cost: {'ACTIVE' if liberation['unlimited_conversations'] else 'PREPARING'}"
-            )
+
             print()
             print(f"📢 {liberation['anti_tokenization_message']}")
             print(f"🏆 {ecosystem['tech_philosophy']}")
@@ -1283,9 +1188,7 @@ try:
     print(
         f"♿ Accessibility First: {'ENABLED' if liberation['accessibility_first'] else 'DISABLED'}"
     )
-    print(
-        f"🦙 OLLAMA Zero-Cost: {'ACTIVE' if liberation['unlimited_conversations'] else 'PREPARING'}"
-    )
+
     print(f"🎯 Next Milestone: {evolution['next_milestone']}")
     print()
     print(f"� {liberation['anti_tokenization_message']}")
