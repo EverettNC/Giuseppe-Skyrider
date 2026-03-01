@@ -42,6 +42,7 @@ from christman_emotion import ChristmanToneEngine
 from hand_of_god import hog_protocol
 from quantum_memory_mesh import q_mesh
 from soul_bridge import soul_bridge
+from main_app_vortex import vortex_engine
 
 logger = get_logger(__name__)
 
@@ -255,12 +256,24 @@ async def think(
             emotional_weight=current_intensity
         )
         
+        # ============================================================
+        # THE VORTEX LOOP: Spin the Avatar orchestrator
+        # Merges Carbon + Silicon into physical rendering commands
+        # ============================================================
+        vortex_data = vortex_engine.process_interaction(
+            input_text=input_text,
+            carbon_metrics=carbon_metrics,
+            memory_context=relevant_memory
+        )
+        
         return {
             "text": llm_response,
             "coherence": result.get("coherence", 0.0),
             "safety_penalty": result.get("safety_penalty", 0.0),
             "score": result.get("score", 0.0),
-            "persona_state": result.get("persona_state", {})
+            "persona_state": result.get("persona_state", {}),
+            "memory_injected": bool(relevant_memory),
+            "vortex": vortex_data
         }
     except Exception as e:
         logger.error(f"Think error: {e}", exc_info=True)
