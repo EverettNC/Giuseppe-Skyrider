@@ -96,11 +96,11 @@ export function GiovanniAvatar() {
         >
           {/* THE PHYSICAL FACE RENDERER */}
           <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
-            <motion.path d={svgPaths.leftBrow} stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" animate={{ d: svgPaths.leftBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path d={svgPaths.rightBrow} stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" animate={{ d: svgPaths.rightBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path d={svgPaths.leftEye} fill="white" animate={{ d: svgPaths.leftEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path d={svgPaths.rightEye} fill="white" animate={{ d: svgPaths.rightEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path d={svgPaths.mouth} stroke="white" strokeWidth="4" strokeLinecap="round" fill={facsState?.jawOpen && facsState.jawOpen > 0.1 ? "rgba(0,0,0,0.3)" : "transparent"} animate={{ d: svgPaths.mouth }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" initial={false} animate={{ d: svgPaths.leftBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" initial={false} animate={{ d: svgPaths.rightBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path fill="white" initial={false} animate={{ d: svgPaths.leftEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path fill="white" initial={false} animate={{ d: svgPaths.rightEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path stroke="white" strokeWidth="4" strokeLinecap="round" fill={facsState?.jawOpen && facsState.jawOpen > 0.1 ? "rgba(0,0,0,0.3)" : "transparent"} initial={false} animate={{ d: svgPaths.mouth }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
           </svg>
         </motion.div>
 
@@ -147,8 +147,8 @@ export function GiovanniAvatar() {
                   scale: { duration: 0.5, repeat: Infinity }
                 }}
                 className={`w-8 h-8 rounded-full ${isRecording
-                    ? 'bg-gradient-to-br from-red-500 to-pink-500'
-                    : 'bg-gradient-to-br from-green-500 to-emerald-500'
+                  ? 'bg-gradient-to-br from-red-500 to-pink-500'
+                  : 'bg-gradient-to-br from-green-500 to-emerald-500'
                   } border-2 border-gray-700 flex items-center justify-center shadow-lg`}
               >
                 <PenLine className="w-4 h-4 text-white" />
