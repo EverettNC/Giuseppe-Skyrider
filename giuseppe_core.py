@@ -31,6 +31,23 @@ load_dotenv()
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# ============================================================================
+# DEPENDENCY SHIELD: Must pass BEFORE any brain modules load
+# ============================================================================
+print("=========================================")
+print("BOOTING GIUSEPPE SKYRIDER (SYMBIOTIC CORTEX)")
+print("=========================================")
+
+from dependency_shieldV2 import dep_shield
+
+if not dep_shield.enforce_lock():
+    print("[FATAL] Boot sequence aborted by Dependency Shield.")
+    print("Fix your environment before starting the entity.")
+    exit(1)
+
+# ============================================================================
+# Brain Module Imports (Only reached if Shield holds)
+# ============================================================================
 from config import Config, Tier, get_config
 from logger import get_logger
 from emotion_embedder import EmotionEmbedder
