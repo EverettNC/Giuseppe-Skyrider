@@ -63,6 +63,7 @@ from main_app_vortex import vortex_engine
 from predictive_intention import intention_engine
 from lucas_recovery import lucas_engine
 from tone_classification_text import text_tone_engine
+from css_axiom import axiom_engine
 
 logger = get_logger(__name__)
 
@@ -265,8 +266,10 @@ async def think(
             secure_input = decrypted_payload.get("telemetry", "")
             
             logger.info("Telemetry verified. Sending to Evolutionary Engine/Fusion Core...")
-            # 3. Process with Fusion Engine
-            result = global_fusion_engine.step(secure_input)
+            # 3. CSS AXIOM: Wrap the input with the immutable ethical charter
+            secured_input = axiom_engine.inject_axiom(secure_input)
+            # 4. Process with Fusion Engine (Axiom-bound)
+            result = global_fusion_engine.step(secured_input)
             
             logger.info("VIRTUS Gatekeeper Engaged: Encrypting outbound response...")
             # 4. VIRTUS Encrypt the response

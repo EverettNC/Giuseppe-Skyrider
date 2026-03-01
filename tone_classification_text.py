@@ -19,7 +19,7 @@ class TextToneClassifier:
 
         # 1. Measure All-Caps (Screaming vs Emphasis)
         all_caps_words = len([w for w in words if w.isupper() and len(w) > 1])
-        caps_ratio = all_caps_words / len(words)
+        caps_ratio = all_caps_words / len(words) if words else 0
 
         # 2. Measure Punctuation Density (Panic/Aggression/Urgency)
         exclamation_count = text.count('!')
@@ -27,7 +27,7 @@ class TextToneClassifier:
         
         # 3. Profanity Machine Gun metric
         profanity_count = sum(1 for w in words if any(p in w.lower() for p in self.profanity_list))
-        profanity_ratio = profanity_count / len(words)
+        profanity_ratio = profanity_count / len(words) if words else 0
         
         # 4. Determine State and Calculate Intensity
         intensity = 1.0 + (caps_ratio * 2.0) + (exclamation_count * 0.1) + (profanity_ratio * 1.5)
@@ -49,11 +49,7 @@ class TextToneClassifier:
             "dominant_state": dominant_state,
             "action_state": action_state,
             "physical_intensity": round(intensity, 2),
-            "metrics": {
-                "caps_ratio": round(caps_ratio, 2),
-                "profanity_ratio": round(profanity_ratio, 2),
-                "exclamation_count": exclamation_count
-            }
+            "raw_scores": {} # Empty fallback to prevent Soul Bridge crashes
         }
 
 # Singleton Orchestrator
