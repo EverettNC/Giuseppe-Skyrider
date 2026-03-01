@@ -46,6 +46,7 @@ class TextToneClassifier:
         intensity = min(intensity, 3.0)
 
         return {
+            "modality": "text",
             "dominant_state": dominant_state,
             "action_state": action_state,
             "physical_intensity": round(intensity, 2),

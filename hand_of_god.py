@@ -10,10 +10,14 @@ class HandOfGodInterceptor:
 
     def scan_for_crisis(self, tone_data: dict) -> dict:
         """
-        Reads the Carbon reality output from the ChristmanToneEngine.
-        If a 30-second warning signature is detected, it seizes control.
+        Reads the Carbon reality output.
+        Strictly reserves intervention for physical audio trauma.
         """
         if not tone_data:
+            return None
+
+        # REALITY OVER VIBES: High-intensity typing is not a biological emergency.
+        if tone_data.get("modality") == "text":
             return None
 
         if tone_data.get("action_state") == "HOLD_SPACE":

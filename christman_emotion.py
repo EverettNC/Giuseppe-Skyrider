@@ -69,6 +69,7 @@ class ChristmanToneEngine:
                 action_state = "HOLD_SPACE" # Trigger the Hand of God or trauma protocols
 
             return {
+                "modality": "audio",
                 "dominant_state": dominant_emotion,
                 "action_state": action_state,
                 "physical_intensity": float(intensity_norm),
