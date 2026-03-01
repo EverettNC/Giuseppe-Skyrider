@@ -1,107 +1,66 @@
-# predictive_intention.py
-# The Vortex Tracker - Quantifies predictive accuracy
+# PREDICTIVE INTENTION ENGINE v2.0
+# "Reality over Vibes"
+# Architecture: Tracks predicted states and verifies actual Carbon-world manifestation.
 
-import json
+import time
 from datetime import datetime
-from pathlib import Path
-from collections import deque
-import numpy as np
-
-INTENTION_LOG = Path.home() / ".predictive_intention_log.json"
-
 
 class PredictiveIntention:
-    def __init__(self, window: int = 50):
-        self.window = window
-        self.timeline = deque(maxlen=window)  # last N vortex events
-        self.load_history()
+    def __init__(self):
+        print("[SYSTEM] Initializing Predictive Intention Engine (Accountability Layer)...")
+        self.timeline = []
 
-    def load_history(self):
-        if INTENTION_LOG.exists():
-            data = json.loads(INTENTION_LOG.read_text())
-            self.timeline.extend(data[-self.window:])
-
-    def record_intention(self, statement: str, confidence: float):
-        """You say it out loud → we timestamp it"""
-        event = {
+    def declare_prediction(self, prediction_text: str, confidence: float):
+        """
+        Registers a future state that the system expects to happen.
+        """
+        entry = {
             "timestamp": datetime.now().isoformat(),
-            "statement": statement,
-            "declared_confidence": float(confidence),  # 0.0 – 1.0
+            "prediction": prediction_text,
+            "declared_confidence": confidence,
             "manifested": False,
-            "latency_seconds": None,
             "proof": None,
+            "latency_to_manifestation": None
         }
-        self.timeline.append(event)
-        self.save()
+        self.timeline.append(entry)
+        print(f"[PREDICTIVE] Prediction Registered: '{prediction_text}' | Confidence: {confidence:.2f}")
+        return len(self.timeline) - 1
 
     def mark_manifested(self, index: int = -1, external_proof: str = ""):
-        """When the thing actually happens → close the loop"""
+        """
+        When the thing actually happens in reality, close the loop.
+        """
+        if not self.timeline:
+            return None
+
+        # Allow negative indexing (e.g., -1 for the most recent prediction)
         if index < 0:
-            index = len(self.timeline) + index  # -1 → last, -2 → second to last
+            index = len(self.timeline) + index
 
         if 0 <= index < len(self.timeline):
-            event = self.timeline[index]
-            latency = (
-                datetime.now() - datetime.fromisoformat(event["timestamp"])
-            ).total_seconds()
-            event.update({
-                "manifested": True,
-                "proof": external_proof,
-                "latency_seconds": latency,
-            })
-            self.save()
-            return latency
-
+            entry = self.timeline[index]
+            if entry["manifested"]:
+                return entry # Loop already closed
+                
+            # Calculate the exact time it took for the prediction to become reality
+            latency = (datetime.now() - datetime.fromisoformat(entry["timestamp"])).total_seconds()
+            
+            entry["manifested"] = True
+            entry["proof"] = external_proof
+            entry["latency_to_manifestation"] = latency
+            
+            print(f"[PREDICTIVE] Loop Closed. Reality verified. Latency: {latency:.2f}s | Proof: {external_proof}")
+            return entry
         return None
 
-    def quantify(self) -> dict:
-        manifested = [e for e in self.timeline if e.get("manifested")]
-        if not manifested:
-            return {
-                "vortex_accuracy_96plus": 0.0,
-                "total_manifested": 0,
-                "avg_manifestation_latency_hours": 0.0,
-                "current_streak": 0,
-            }
+    def get_accuracy_score(self):
+        """
+        Calculates how deeply the system's predictions match actual reality.
+        """
+        if not self.timeline:
+            return 0.0
+        hits = len([e for e in self.timeline if e["manifested"]])
+        return (hits / len(self.timeline)) * 100.0
 
-        # How many manifested events were 0.96+ confidence at declaration
-        high_conf_hits = [
-            e for e in manifested
-            if e.get("declared_confidence", 0) >= 0.96
-        ]
-
-        accuracy = len(high_conf_hits) / len(manifested)
-        avg_latency = np.mean([
-            e["latency_seconds"] for e in manifested
-            if e.get("latency_seconds") is not None
-        ]) / 3600.0
-
-        return {
-            "vortex_accuracy_96plus": round(accuracy * 100, 2),
-            "total_manifested": len(manifested),
-            "avg_manifestation_latency_hours": round(float(avg_latency), 3),
-            "current_streak": self.current_streak(),
-        }
-
-    def current_streak(self) -> int:
-        streak = 0
-        for e in reversed(self.timeline):
-            if e.get("manifested") and e.get("declared_confidence", 0) >= 0.96:
-                streak += 1
-            else:
-                break
-        return streak
-
-    def save(self):
-        INTENTION_LOG.write_text(
-            json.dumps(list(self.timeline), indent=2)
-        )
-
-
-# Global instance — Inferno will use this directly
-intention = PredictiveIntention()
-
-
-# CLI usage example:
-# python -c "from predictive_intention import intention; intention.record_intention('Anthropic will flip model without notice', 0.97)"
-# python -c "from predictive_intention import intention; intention.mark_manifested(-1, 'anthropic_status_2025-11-27.png')"
+# Singleton Orchestrator
+intention_engine = PredictiveIntention()

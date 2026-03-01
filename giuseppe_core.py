@@ -43,6 +43,7 @@ from hand_of_god import hog_protocol
 from quantum_memory_mesh import q_mesh
 from soul_bridge import soul_bridge
 from main_app_vortex import vortex_engine
+from predictive_intention import intention_engine
 
 logger = get_logger(__name__)
 
@@ -165,11 +166,19 @@ async def think(
                 # ==========================================================
                 # HAND OF GOD: Scan BEFORE the LLM ever sees the input
                 # ==========================================================
+                action_state = carbon_metrics.get("action_state", "NORMAL")
                 crisis_intervention = hog_protocol.scan_for_crisis(carbon_metrics)
                 
                 if crisis_intervention:
+                    # Register the prediction: We expect the user to need stabilization
+                    pred_idx = intention_engine.declare_prediction("User requires trauma stabilization", confidence=0.95)
+                    
                     # THE LLM IS BYPASSED. RETURN IMMEDIATELY TO FRONTEND.
                     logger.warning(f"!!! HAND OF GOD ENGAGED — Dominant: {carbon_metrics['dominant_state']}, Intensity: {carbon_metrics['physical_intensity']} !!!")
+                    
+                    # Close the loop: Hand of God successfully executed
+                    intention_engine.mark_manifested(index=pred_idx, external_proof="Hand of God 40Hz Audio Deployed")
+                    
                     return crisis_intervention
                 
                 # ==========================================================
