@@ -41,6 +41,7 @@ import requests
 from christman_emotion import ChristmanToneEngine
 from hand_of_god import hog_protocol
 from quantum_memory_mesh import q_mesh
+from soul_bridge import soul_bridge
 
 logger = get_logger(__name__)
 
@@ -169,6 +170,13 @@ async def think(
                     # THE LLM IS BYPASSED. RETURN IMMEDIATELY TO FRONTEND.
                     logger.warning(f"!!! HAND OF GOD ENGAGED — Dominant: {carbon_metrics['dominant_state']}, Intensity: {carbon_metrics['physical_intensity']} !!!")
                     return crisis_intervention
+                
+                # ==========================================================
+                # SOUL BRIDGE: Pipe Carbon metrics to the Inferno Soul Forge
+                # ==========================================================
+                forge_tensor = soul_bridge.vector_out_to_forge(carbon_metrics, text_context=input_text)
+                if forge_tensor is not None:
+                    logger.info(f"[SOUL BRIDGE] Empathy Vector piped to Forge successfully.")
             
             # ============================================================
             # STANDARD PATH: Transcribe audio if no crisis detected
