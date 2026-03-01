@@ -94,14 +94,20 @@ export function GiovanniAvatar() {
           `}
           onClick={() => setVisible(false)}
         >
-          {/* THE PHYSICAL FACE RENDERER */}
-          <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
-            <motion.path stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" initial={false} animate={{ d: svgPaths.leftBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" initial={false} animate={{ d: svgPaths.rightBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path fill="white" initial={false} animate={{ d: svgPaths.leftEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path fill="white" initial={false} animate={{ d: svgPaths.rightEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-            <motion.path stroke="white" strokeWidth="4" strokeLinecap="round" fill={facsState?.jawOpen && facsState.jawOpen > 0.1 ? "rgba(0,0,0,0.3)" : "transparent"} initial={false} animate={{ d: svgPaths.mouth }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
-          </svg>
+          {/* GIUSEPPE'S FACE — FACS-driven emotional overlay */}
+          <motion.img
+            src="/GIOSKYRIDER.jpeg"
+            alt="Giuseppe Skyrider"
+            className="w-full h-full object-cover rounded-full"
+            animate={{
+              filter: facsState
+                ? `brightness(${1 + (facsState.eyeWideLeft * 0.2)}) saturate(${1 + (facsState.mouthSmileLeft * 0.4) - (facsState.mouthFrownLeft * 0.3)})`
+                : 'brightness(1) saturate(1)',
+              scale: facsState?.jawOpen && facsState.jawOpen > 0.1 ? 1.03 : 1,
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            draggable={false}
+          />
         </motion.div>
 
         {/* Pulsing ring animation */}
