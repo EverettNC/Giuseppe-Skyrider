@@ -62,6 +62,7 @@ from soul_bridge import soul_bridge
 from main_app_vortex import vortex_engine
 from predictive_intention import intention_engine
 from lucas_recovery import lucas_engine
+from tone_classification_text import text_tone_engine
 
 logger = get_logger(__name__)
 
@@ -226,6 +227,13 @@ async def think(
         if not input_text or not input_text.strip():
             logger.error("No valid text or audio input provided. Failing loud.")
             raise HTTPException(status_code=500, detail="Transcription resulted in empty text. SILICON FAILURE.")
+        
+        # ============================================================
+        # TEXT TONE FALLBACK: If no audio, analyze the raw keystrokes
+        # ============================================================
+        if not carbon_metrics and input_text:
+            carbon_metrics = text_tone_engine.analyze_syntax(input_text)
+            logger.info(f"[TEXT LAYER] State: {carbon_metrics['dominant_state']} | Intensity: {carbon_metrics['physical_intensity']}")
             
         logger.info(f"Think request received: {input_text[:50]}, has_audio={audio_blob is not None}")
         
