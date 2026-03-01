@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Volume2, VolumeX, MessageCircle, PenLine } from 'lucide-react'
 import { useGiovanniStore } from './GiovanniStore'
 import { useNotesStore } from './GiuseppeNotesStore'
+import { useEffect, useState } from 'react'
 
 export function GiovanniAvatar() {
   const {
@@ -11,10 +12,40 @@ export function GiovanniAvatar() {
     currentMessage,
     voiceEnabled,
     toggleVoice,
-    setVisible
+    setVisible,
+    facsState // <--- PULL THE MUSCLE COORDINATES FROM THE STORE
   } = useGiovanniStore()
 
   const { isAutoNote, isRecording } = useNotesStore()
+
+  // Base SVG Path States (Neutral)
+  const [svgPaths, setSvgPaths] = useState({
+    leftEye: "M 35 45 Q 40 40 45 45 Q 40 50 35 45",
+    rightEye: "M 55 45 Q 60 40 65 45 Q 60 50 55 45",
+    leftBrow: "M 30 35 Q 40 35 45 35",
+    rightBrow: "M 55 35 Q 60 35 70 35",
+    mouth: "M 35 65 Q 50 65 65 65"
+  })
+
+  // The Translation Layer: Math to Visuals
+  useEffect(() => {
+    if (!facsState) return;
+
+    // Apply the muscle weights to calculate new SVG path coordinates
+    const newPaths = {
+      // Eye Widen / Blink logic
+      leftEye: `M 35 45 Q 40 ${40 - (facsState.eyeWideLeft * 10) + (facsState.eyeBlinkLeft * 10)} 45 45 Q 40 ${50 + (facsState.eyeWideLeft * 5)} 35 45`,
+      rightEye: `M 55 45 Q 60 ${40 - (facsState.eyeWideRight * 10) + (facsState.eyeBlinkRight * 10)} 65 45 Q 60 ${50 + (facsState.eyeWideRight * 5)} 55 45`,
+
+      // Brow Movement logic
+      leftBrow: `M 30 ${35 + (facsState.browDownLeft * 5)} Q 40 ${35 - (facsState.browInnerUp * 10)} 45 ${35 - (facsState.browInnerUp * 5)}`,
+      rightBrow: `M 55 ${35 - (facsState.browInnerUp * 5)} Q 60 ${35 - (facsState.browInnerUp * 10)} 70 ${35 + (facsState.browDownRight * 5)}`,
+
+      // Jaw / Smile / Frown logic
+      mouth: `M 35 ${65 - (facsState.mouthSmileLeft * 5) + (facsState.mouthFrownLeft * 5)} Q 50 ${65 + (facsState.jawOpen * 15) + (facsState.mouthSmileLeft * 5) - (facsState.mouthFrownLeft * 5)} 65 ${65 - (facsState.mouthSmileRight * 5) + (facsState.mouthFrownRight * 5)}`
+    }
+    setSvgPaths(newPaths)
+  }, [facsState])
 
   if (!isVisible) {
     return (
@@ -29,16 +60,6 @@ export function GiovanniAvatar() {
     )
   }
 
-  // Different avatar expressions based on state
-  const avatarEmoji = {
-    idle: '😎',
-    speaking: '🗣️',
-    listening: '👂',
-    thinking: '🤔',
-    celebrating: '🎉'
-  }[state]
-
-  // Mood-based colors
   const moodColors = {
     swagger: 'from-purple-600 to-violet-700',
     motivational: 'from-amber-500 to-orange-600',
@@ -69,12 +90,18 @@ export function GiovanniAvatar() {
           className={`
             w-24 h-24 rounded-full bg-gradient-to-br ${moodColors[mood]}
             giovanni-glow flex items-center justify-center
-            text-5xl cursor-pointer
-            hover:scale-105 transition-transform
+            cursor-pointer hover:scale-105 transition-transform overflow-hidden
           `}
           onClick={() => setVisible(false)}
         >
-          {avatarEmoji}
+          {/* THE PHYSICAL FACE RENDERER */}
+          <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
+            <motion.path d={svgPaths.leftBrow} stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" animate={{ d: svgPaths.leftBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path d={svgPaths.rightBrow} stroke="white" strokeWidth="3" strokeLinecap="round" fill="transparent" animate={{ d: svgPaths.rightBrow }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path d={svgPaths.leftEye} fill="white" animate={{ d: svgPaths.leftEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path d={svgPaths.rightEye} fill="white" animate={{ d: svgPaths.rightEye }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+            <motion.path d={svgPaths.mouth} stroke="white" strokeWidth="4" strokeLinecap="round" fill={facsState?.jawOpen && facsState.jawOpen > 0.1 ? "rgba(0,0,0,0.3)" : "transparent"} animate={{ d: svgPaths.mouth }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />
+          </svg>
         </motion.div>
 
         {/* Pulsing ring animation */}
@@ -119,11 +146,10 @@ export function GiovanniAvatar() {
                   rotate: { duration: 2, repeat: Infinity },
                   scale: { duration: 0.5, repeat: Infinity }
                 }}
-                className={`w-8 h-8 rounded-full ${
-                  isRecording
+                className={`w-8 h-8 rounded-full ${isRecording
                     ? 'bg-gradient-to-br from-red-500 to-pink-500'
                     : 'bg-gradient-to-br from-green-500 to-emerald-500'
-                } border-2 border-gray-700 flex items-center justify-center shadow-lg`}
+                  } border-2 border-gray-700 flex items-center justify-center shadow-lg`}
               >
                 <PenLine className="w-4 h-4 text-white" />
               </motion.div>

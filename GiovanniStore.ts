@@ -12,6 +12,22 @@ export interface GiovanniMessage {
   spoken: boolean
 }
 
+export interface FacsBlendshapes {
+  browInnerUp: number;
+  browDownLeft: number;
+  browDownRight: number;
+  eyeBlinkLeft: number;
+  eyeBlinkRight: number;
+  eyeWideLeft: number;
+  eyeWideRight: number;
+  jawOpen: number;
+  mouthSmileLeft: number;
+  mouthSmileRight: number;
+  mouthFrownLeft: number;
+  mouthFrownRight: number;
+  cheekPuff: number;
+}
+
 interface GiovanniStore {
   // Avatar state
   mood: GiovanniMood
@@ -28,6 +44,9 @@ interface GiovanniStore {
   volume: number
   isListening: boolean
 
+  // FACS Blendshape state (from Vortex payload)
+  facsState: FacsBlendshapes | null
+
   // Actions
   setMood: (mood: GiovanniMood) => void
   setState: (state: GiovanniState) => void
@@ -39,6 +58,7 @@ interface GiovanniStore {
   toggleVoice: () => void
   setVolume: (volume: number) => void
   toggleListening: () => void
+  setFacsState: (facs: FacsBlendshapes) => void
 }
 
 export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
@@ -52,6 +72,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   voiceEnabled: true,
   volume: 0.8,
   isListening: false,
+  facsState: null,
 
   // Actions
   setMood: (mood) => set({ mood }),
@@ -157,5 +178,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
 
   setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
 
-  toggleListening: () => set((state) => ({ isListening: !state.isListening }))
+  toggleListening: () => set((state) => ({ isListening: !state.isListening })),
+
+  setFacsState: (facs) => set({ facsState: facs }),
 }))

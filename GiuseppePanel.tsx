@@ -15,7 +15,7 @@ export function GiuseppePanel() {
   const [actionState, setActionState] = useState<"idle" | "adapting">("idle");
   const [currentTask, setCurrentTask] = useState<TaskEntry | null>(null);
   const [upcomingTasks, setUpcomingTasks] = useState<TaskEntry[]>([]);
-  const { speak } = useGiovanniStore();
+  const { speak, setFacsState } = useGiovanniStore();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -112,6 +112,14 @@ export function GiuseppePanel() {
             }
 
             const data = await response.json();
+
+            // ============================================================
+            // FACS BLENDSHAPE BRIDGE: Push muscle coordinates to the Avatar
+            // ============================================================
+            if (data.vortex?.avatar_state?.facs_blendshapes) {
+              setFacsState(data.vortex.avatar_state.facs_blendshapes);
+              console.log("[CARBON->SILICON] FACS Blendshapes pushed to Avatar store.");
+            }
 
             // Speak the response text
             if (data.text) {
