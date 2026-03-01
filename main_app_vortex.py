@@ -4,6 +4,7 @@
 
 import time
 import torch
+from facs_graph import facs_engine
 
 class SymbioticAvatar:
     def __init__(self, user_id="ultra"):
@@ -45,6 +46,9 @@ class SymbioticAvatar:
         elif physical_intensity > 0.8:
             vocal_directive = "exaggerated"
 
+        # Get the physical muscle coordinates based on the emotion and intensity
+        muscle_coordinates = facs_engine.calculate_microexpressions(dominant_state, physical_intensity)
+
         # STEP 4: RENDER LOOP HANDOFF (Packaging for the UI)
         latency_ms = (time.time() - start_time) * 1000
         
@@ -53,7 +57,8 @@ class SymbioticAvatar:
                 "emotion": dominant_state,
                 "eye_lock": eye_lock,
                 "breath_freq_hz": round(breath_freq, 2),
-                "color_shift": "warm" if dominant_state in ["happy", "proud", "sweetheart"] else "cool"
+                "color_shift": "warm" if dominant_state in ["happy", "proud", "sweetheart"] else "cool",
+                "facs_blendshapes": muscle_coordinates
             },
             "vocal_directive": vocal_directive,
             "vortex_latency_ms": round(latency_ms, 2)
