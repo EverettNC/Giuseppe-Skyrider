@@ -4,6 +4,7 @@
 
 class CSSAxiom:
     def __init__(self):
+        print("[SYSTEM] Initializing CSS Axiom Engine...")
         self.charter = """
 =========================================
 SYSTEM OVERRIDE: CARBON-SILICON SYMBIOSIS (CSS) AXIOMS
