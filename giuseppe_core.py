@@ -40,6 +40,7 @@ from orchestrator import secure_virtus_decrypt, secure_virtus_encrypt, _SERVER_K
 import requests
 from christman_emotion import ChristmanToneEngine
 from hand_of_god import hog_protocol
+from quantum_memory_mesh import q_mesh
 
 logger = get_logger(__name__)
 
@@ -136,6 +137,7 @@ async def think(
     """
     try:
         input_text = text
+        carbon_metrics = None  # Initialized here so Memory Mesh always has access
         
         # Explicit Audio processing without magical placeholders
         if audio_blob and not input_text:
@@ -191,12 +193,21 @@ async def think(
             
         logger.info(f"Think request received: {input_text[:50]}, has_audio={audio_blob is not None}")
         
+        # ============================================================
+        # QUANTUM MEMORY MESH: Retrieve context BEFORE the LLM sees it
+        # ============================================================
+        relevant_memory = q_mesh.retrieve(input_text)
+        
+        memory_context = ""
+        if relevant_memory:
+            logger.info(f"[MEMORY MESH] Context Restored: {relevant_memory[:80]}...")
+            memory_context = f" [Memory Context: {relevant_memory}]"
         
         context_str = ""
         if schedule_context:
             context_str = " [Context: " + str(schedule_context) + "]"
             
-        combined_payload = {"telemetry": input_text + context_str}
+        combined_payload = {"telemetry": input_text + context_str + memory_context}
         
         try:
             # 1. Simulate frontend encryption (Client side would do this)
@@ -225,8 +236,19 @@ async def think(
             logger.error(f"VIRTUS FAILURE: {virtus_err}")
             raise HTTPException(status_code=403, detail="VIRTUS_GATEKEEPER_FAILURE")
         
+        # ============================================================
+        # QUANTUM MEMORY MESH: Store the completed interaction
+        # Feed Carbon intensity as emotional weight for future retrieval
+        # ============================================================
+        llm_response = result.get("output", "ok")
+        current_intensity = carbon_metrics['physical_intensity'] if carbon_metrics else 1.0
+        q_mesh.store_memory(
+            interaction_text=f"User: {input_text} | Giuseppe: {llm_response}",
+            emotional_weight=current_intensity
+        )
+        
         return {
-            "text": result.get("output", "ok"),
+            "text": llm_response,
             "coherence": result.get("coherence", 0.0),
             "safety_penalty": result.get("safety_penalty", 0.0),
             "score": result.get("score", 0.0),
