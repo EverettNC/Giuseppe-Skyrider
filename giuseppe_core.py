@@ -61,6 +61,7 @@ from quantum_memory_mesh import q_mesh
 from soul_bridge import soul_bridge
 from main_app_vortex import vortex_engine
 from predictive_intention import intention_engine
+from lucas_recovery import lucas_engine
 
 logger = get_logger(__name__)
 
@@ -273,13 +274,18 @@ async def think(
         
         # ============================================================
         # QUANTUM MEMORY MESH: Store the completed interaction
-        # Feed Carbon intensity as emotional weight for future retrieval
+        # Lucas Module gates the emotional weight (Lived Truth)
         # ============================================================
         llm_response = result.get("output", "ok")
-        current_intensity = carbon_metrics['physical_intensity'] if carbon_metrics else 1.0
+        raw_intensity = carbon_metrics['physical_intensity'] if carbon_metrics else 1.0
+        dominant_state = carbon_metrics['dominant_state'] if carbon_metrics else "neutral"
+        
+        # Let Lucas determine the true impact weight (Lived Truth)
+        lived_truth_weight = lucas_engine.calculate_salience(raw_intensity, dominant_state)
+        
         q_mesh.store_memory(
             interaction_text=f"User: {input_text} | Giuseppe: {llm_response}",
-            emotional_weight=current_intensity
+            emotional_weight=lived_truth_weight
         )
         
         # ============================================================
