@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Import Tier 7 Crypto 
 try:
-    from kyber import KyberHandshake
+    from christman_crypto.kyber import KyberHandshake
     from tier7_steg import steg_engine
 except ImportError as e:
     logger.error(f"CRITICAL: Failed to load christman_crypto: {e}")
