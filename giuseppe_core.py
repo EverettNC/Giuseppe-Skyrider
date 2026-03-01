@@ -38,6 +38,8 @@ from tone_engine import ToneScoreEngine
 from fusion_engine import FusionEngine
 from orchestrator import secure_virtus_decrypt, secure_virtus_encrypt, _SERVER_KEYPAIR
 import requests
+from christman_emotion import ChristmanToneEngine
+from hand_of_god import hog_protocol
 
 logger = get_logger(__name__)
 
@@ -62,6 +64,9 @@ config = get_config()
 
 # Global Fusion Engine Instance for state persistence across endpoints
 global_fusion_engine = FusionEngine()
+
+# Global Christman Tone Engine (The Hearing Layer)
+tone_engine_v2 = ChristmanToneEngine()
 
 # ============================================================================
 # Request/Response Models
@@ -136,6 +141,36 @@ async def think(
         if audio_blob and not input_text:
             audio_bytes = await audio_blob.read()
             
+            # ============================================================
+            # CARBON LAYER: Save raw audio to disk for ToneScore analysis
+            # ============================================================
+            import tempfile
+            audio_tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False, dir="data/output")
+            audio_tmp.write(audio_bytes)
+            audio_tmp.close()
+            wav_file_path = audio_tmp.name
+            
+            # ============================================================
+            # THE HEARING ENGINE: Analyze the raw Carbon waveform
+            # ============================================================
+            carbon_metrics = tone_engine_v2.analyze_audio(wav_file_path)
+            
+            if carbon_metrics:
+                logger.info(f"[CARBON LAYER] Dominant State: {carbon_metrics['dominant_state']} | Intensity: {carbon_metrics['physical_intensity']}")
+                
+                # ==========================================================
+                # HAND OF GOD: Scan BEFORE the LLM ever sees the input
+                # ==========================================================
+                crisis_intervention = hog_protocol.scan_for_crisis(carbon_metrics)
+                
+                if crisis_intervention:
+                    # THE LLM IS BYPASSED. RETURN IMMEDIATELY TO FRONTEND.
+                    logger.warning(f"!!! HAND OF GOD ENGAGED — Dominant: {carbon_metrics['dominant_state']}, Intensity: {carbon_metrics['physical_intensity']} !!!")
+                    return crisis_intervention
+            
+            # ============================================================
+            # STANDARD PATH: Transcribe audio if no crisis detected
+            # ============================================================
             try:
                 from enhanced_speech_recognition import EnhancedSpeechRecognition
                 recognizer = EnhancedSpeechRecognition()
