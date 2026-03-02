@@ -342,25 +342,6 @@ def route_message(message: str, user_tier: Optional[str] = None) -> Dict:
 from tier7_steg import Tier7Steganography
 steg_engine = Tier7Steganography()
 
-def secure_virtus_decrypt(payload: bytes, server_private_key: bytes) -> Dict[str, Any]:
-    """
-    VIRTUS Gatekeeper: Inbound Decryption (Tier 7 Post-Quantum)
-    """
-    try:
-        # Step 1: Strip Steganography
-        raw_crypto_payload = steg_engine.extract(payload)
-        
-        # Step 2: Decrypt with Kyber session keys (Simulated here with standard json since Kyber is KEM)
-        # Real Kyber is a Key Encapsulation Mechanism, so we get the symmetric key
-        # Here we just unpack a JSON representation securely
-        decrypted_json = raw_crypto_payload.decode("utf-8")
-        data = json.loads(decrypted_json)
-        return data
-        
-    except Exception as e:
-        logger.error(f"CRITICAL SECURITY ALERT (Rule 6): Payload corruption or interception attempt detected. {e}")
-        # Fail Loud & Honest! Drop packet immediately.
-        raise ValueError("VIRTUS_GATEKEEPER_FAILURE: Disconnecting.")
 
 def secure_virtus_encrypt(data: Dict[str, Any], client_public_key: bytes) -> bytes:
     """
