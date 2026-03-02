@@ -22,25 +22,33 @@ import unicodedata
 from dataclasses import dataclass
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  CRYPTO IMPORTS & STUBS (unchanged from your version)
+#  CRYPTO IMPORTS — Real Tier 7 from christman-crypto (Harvest-Now-Decrypt-Later)
 # ──────────────────────────────────────────────────────────────────────────────
 try:
-    from christman_crypto.kyber import KyberHandshake
-    from tier7_steg import Tier7Steganography
+    from christman_crypto import HybridPQCipher, LSBSteganography
 except ImportError as e:
-    logger.error(f"CRITICAL: Failed to load christman_crypto: {e}")
+    logger.critical(f"CRITICAL: Failed to load christman_crypto: {e}")
+    raise ImportError("christman-crypto required for Tier 7 VIRTUS Gatekeeper")
 
+# Global server keypair (ML-KEM-768 hybrid) — generate once at startup
 _SERVER_KEYPAIR = None
 try:
-    _SERVER_KEYPAIR = KyberHandshake().generate_keypair()
-except Exception:
-    pass
+    pq = HybridPQCipher(768)  # ML-KEM-768
+    _SERVER_KEYPAIR = pq.keygen()  # returns (public_key: bytes, private_key: bytes)
+    logger.info("VIRTUS Tier 7 keypair generated successfully")
+except Exception as e:
+    logger.critical(f"Failed to generate server PQ keypair: {e}")
+    raise
 
-steg_engine = Tier7Steganography()
+# Default carrier for outbound stego (add real PNGs in production)
+_DEFAULT_CARRIER_PATH = "data/carriers/neutral_memorial_512x512.png"
+if not os.path.exists(_DEFAULT_CARRIER_PATH):
+    logger.warning(f"Carrier image not found: {_DEFAULT_CARRIER_PATH}. Stego may fail.")
 
 
 @dataclass
@@ -174,7 +182,6 @@ class SpecialistOrchestrator:
             triggered = [p.pattern for p in patterns if p.search(message)]
             if triggered:
                 config = self.SPECIALISTS[specialist_id]
-                # Diminishing returns: base 0.55 + sqrt(n_triggers)*0.15, cap at 0.95
                 n = len(triggered)
                 confidence = min(0.95, 0.55 + (n ** 0.5) * 0.15 + (0.08 if n >= 3 else 0))
                 matches.append(SpecialistMatch(
@@ -186,12 +193,10 @@ class SpecialistOrchestrator:
 
         matches.sort(key=lambda x: x.confidence, reverse=True)
 
-        # Eternal tier ($199) forces Arthur priority
         if user_tier == 'eternal':
             arthur_match = next((m for m in matches if m.specialist == 'arthur'), None)
             if arthur_match:
                 return arthur_match
-            # Baseline even without triggers
             return SpecialistMatch(
                 specialist='arthur',
                 confidence=0.75,
@@ -234,8 +239,7 @@ class SpecialistOrchestrator:
         }
 
     def _get_supporting_specialists(self, primary_match: SpecialistMatch) -> List[str]:
-        # Placeholder — expand later for multi-specialist cases (e.g. grief + PTSD → Arthur + Siera)
-        return []
+        return []  # Expand for overlaps (e.g. grief + PTSD)
 
     def get_specialist_info(self, specialist_id: str) -> Optional[Dict]:
         return self.SPECIALISTS.get(specialist_id)
@@ -260,23 +264,56 @@ def route_message(message: str, user_tier: Optional[str] = None) -> Dict:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  secure_virtus_encrypt — YOUR ORIGINAL VERSION (with big warning)
+#  VIRTUS Gatekeeper — Real Tier 7 PQ Hybrid + LSB Stego
 # ──────────────────────────────────────────────────────────────────────────────
-# WARNING: This function DOES NOT provide real encryption.
-#          It only serializes → steganography (hiding, NOT confidentiality).
-#          It IGNORES client_public_key entirely.
-#          The name/docstring/exception claim post-quantum protection → misleading.
-#          For real Tier-7 PQ hybrid (ML-KEM + AES-GCM), see earlier suggestions.
 def secure_virtus_encrypt(data: Dict[str, Any], client_public_key: bytes) -> bytes:
     """
     VIRTUS Gatekeeper: Outbound Encryption (Tier 7 Post-Quantum)
+    1. Hybrid PQ encrypt with ML-KEM-768 + symmetric (XChaCha20-Poly1305)
+    2. Embed via LSB steganography in carrier image
     """
     try:
-        json_payload = json.dumps(data).encode("utf-8")
-        return steg_engine.encapsulate(json_payload)
+        payload = json.dumps(data, sort_keys=True).encode("utf-8")
+
+        # PQ Hybrid encryption (using recipient/client public key)
+        pq = HybridPQCipher(768)
+        encrypted_bundle = pq.encrypt(client_public_key, payload)  # bundle = ephemeral_pub + ct + tag
+
+        # Tier 7 LSB stego
+        steg = LSBSteganography()
+        stego_bytes = steg.hide(_DEFAULT_CARRIER_PATH, encrypted_bundle.hex())  # hex for text-based LSB
+
+        logger.info(f"VIRTUS outbound: PQ-encrypted {len(payload)}B → stego {len(stego_bytes)}B")
+        return stego_bytes
+
     except Exception as e:
-        logger.error(f"CRITICAL SECURITY ALERT (Rule 6): Outbound encryption failure. {e}")
-        raise ValueError("VIRTUS_GATEKEEPER_FAILURE: Cannot broadcast unencrypted cortex data.")
+        logger.critical(f"VIRTUS ENCRYPT FAILURE: {e}", exc_info=True)
+        raise ValueError("VIRTUS_GATEKEEPER_FAILURE: Cannot broadcast unprotected data.")
+
+
+def secure_virtus_decrypt(stego_data: bytes) -> Dict[str, Any]:
+    """
+    VIRTUS Gatekeeper: Inbound Decryption (Tier 7 Post-Quantum)
+    1. Extract from LSB stego
+    2. Decrypt with server private key
+    """
+    try:
+        # Reverse stego
+        steg = LSBSteganography()
+        extracted_hex = steg.extract(stego_data)
+        encrypted_bundle = bytes.fromhex(extracted_hex)
+
+        # PQ Hybrid decryption
+        pq = HybridPQCipher(768)
+        plaintext = pq.decrypt(_SERVER_KEYPAIR[1], encrypted_bundle)  # private key
+
+        data = json.loads(plaintext.decode("utf-8"))
+        logger.info("VIRTUS inbound decrypted successfully")
+        return data
+
+    except Exception as e:
+        logger.critical(f"VIRTUS DECRYPT FAILURE: {e}", exc_info=True)
+        raise ValueError("VIRTUS_GATEKEEPER_FAILURE: Integrity/authenticity compromised.")
 
 
 if __name__ == '__main__':
