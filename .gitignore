@@ -3,6 +3,7 @@ node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+Anaconda3-2025
 
 # Build output
 dist/

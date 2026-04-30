@@ -1,14 +1,24 @@
 #!/bin/bash
-echo "🚀 Launching Giovanni Skyrider Ecosystem..."
+# GIUSEPPE SKYRIDER BOOT SEQUENCE
+# "Nothing Vital Lives Below Root" - Environment Auto-Silo
+# Target Hardware: Apple Silicon (MPS Native)
 
-# 1. Start the Giovanni File Coordinator
-python3 giovanni_coordinator.py &
+# 1. Access the Conda logic (Assuming default miniconda path)
+source ~/miniconda3/etc/profile.d/conda.sh
 
-# 2. Start the Python Backend (The Silicon Spine)
-python3 giuseppe_core.py & 
+# 2. Silently activate the stable silo
+conda activate skyrider
 
-# 3. Wait for backend to bind to port 8001
-sleep 2 
+echo "========================================="
+echo "🚀 LAUNCHING SKYRIDER ECOSYSTEM"
+echo "========================================="
 
-# 4. Start the Vite Frontend (The Carbon Interface)
+# 3. Boot the Brain (Python Backend)
+# We use 'python' here because the skyrider silo is active
+python giuseppe_core.py &
+
+# 4. Wait a beat for the backend to claim its hardware
+sleep 2
+
+# 5. Boot the Face (Vite Frontend)
 npm run dev
