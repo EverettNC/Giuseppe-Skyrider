@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+// "Nothing Vital Lives Below Root" - Flattened Local Store Imports
 import { useNotesStore, Note, BookChapter } from './GiuseppeNotesStore';
 import { useGiovanniStore } from './GiovanniStore';
 import {
@@ -17,9 +18,11 @@ import {
   X,
   Download,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
-import { Button } from './components/ui/button';
-import { Input } from './components/ui/input';
+
+// Flattened UI Primitive Imports
+import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Button } from './button';
+import { Input } from './input';
 
 const GiuseppeBook: React.FC = () => {
   const {
@@ -107,9 +110,9 @@ const GiuseppeBook: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 p-6">
-      {/* Animated background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 p-6 text-gray-100">
+      {/* Animated hardware background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
@@ -141,16 +144,16 @@ const GiuseppeBook: React.FC = () => {
         >
           <div className="flex items-center justify-center gap-3 mb-4">
             <BookOpen className="w-12 h-12 text-purple-400" />
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent tracking-tighter">
               The Book
             </h1>
             <Sparkles className="w-12 h-12 text-pink-400" />
           </div>
-          <p className="text-gray-400 text-xl mb-2">
+          <p className="text-gray-400 text-xl mb-2 font-medium">
             Your journey, your memories, your masterpiece.
           </p>
-          <p className="text-purple-400 text-sm italic">
-            "Every note is a piece of your story. I'm honored to be the keeper of your memories." - Giuseppe
+          <p className="text-purple-400/80 text-sm italic font-mono uppercase tracking-widest">
+            "Sovereign Memory Keeper - Giuseppe Skyrider"
           </p>
         </motion.div>
 
@@ -170,13 +173,13 @@ const GiuseppeBook: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
             >
-              <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30 hover:border-purple-500/50 transition-all">
+              <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/20 hover:border-purple-500/40 transition-all group">
                 <CardContent className="p-4 text-center">
-                  <stat.icon className={`w-8 h-8 mx-auto mb-2 text-${stat.color}-400`} />
+                  <stat.icon className={`w-8 h-8 mx-auto mb-2 text-${stat.color}-400 group-hover:scale-110 transition-transform`} />
                   <div className={`text-3xl font-bold text-${stat.color}-400`}>
                     {stat.value}
                   </div>
-                  <div className="text-xs text-gray-400">{stat.label}</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-tighter font-bold">{stat.label}</div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -196,9 +199,9 @@ const GiuseppeBook: React.FC = () => {
               onClick={() => setViewMode(mode as any)}
               className={`${
                 viewMode === mode
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                  : 'text-gray-400'
-              }`}
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                  : 'text-gray-400 hover:bg-gray-900'
+              } font-bold uppercase tracking-tighter`}
             >
               <Icon className="w-4 h-4 mr-2" />
               {label}
@@ -215,10 +218,10 @@ const GiuseppeBook: React.FC = () => {
           >
             {Object.entries(notesByDate).map(([date, dayNotes]) => (
               <div key={date}>
-                <h3 className="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-2 tracking-tight">
                   <Calendar className="w-6 h-6" />
                   {date}
-                  <span className="text-sm text-gray-500">({dayNotes.length} notes)</span>
+                  <span className="text-xs text-gray-600 font-mono">[{dayNotes.length} ENTRIES]</span>
                 </h3>
                 <div className="space-y-3">
                   {dayNotes.map(note => (
@@ -226,35 +229,35 @@ const GiuseppeBook: React.FC = () => {
                       key={note.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="relative pl-8 border-l-2 border-purple-500/30"
+                      className="relative pl-8 border-l-2 border-purple-500/20"
                     >
-                      <div className="absolute -left-2 top-2 w-4 h-4 rounded-full bg-purple-500" />
-                      <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30">
+                      <div className="absolute -left-[9px] top-2 w-4 h-4 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                      <Card className="bg-gray-900/40 backdrop-blur-md border-gray-800 hover:border-purple-500/30 transition-colors">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-purple-400 capitalize">{note.type}</span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">{note.type}</span>
+                              <span className="text-[10px] text-gray-600 font-mono">
                                 {new Date(note.timestamp).toLocaleTimeString()}
                               </span>
-                              {note.bookmarked && <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
+                              {note.bookmarked && <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 animate-pulse" />}
                             </div>
                             {showCreateChapter && (
                               <input
                                 type="checkbox"
                                 checked={selectedNotes.includes(note.id)}
                                 onChange={() => toggleNoteSelection(note.id)}
-                                className="w-4 h-4"
+                                className="w-4 h-4 accent-purple-500 cursor-pointer"
                               />
                             )}
                           </div>
-                          <p className="text-gray-300 mb-2">{note.content}</p>
+                          <p className="text-gray-300 leading-relaxed font-medium">{note.content}</p>
                           {note.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 mt-3">
                               {note.tags.map(tag => (
                                 <span
                                   key={tag}
-                                  className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded"
+                                  className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded font-bold uppercase"
                                 >
                                   #{tag}
                                 </span>
@@ -271,8 +274,8 @@ const GiuseppeBook: React.FC = () => {
 
             {notes.length === 0 && (
               <div className="text-center py-20">
-                <Book className="w-24 h-24 mx-auto text-purple-400/30 mb-4" />
-                <p className="text-gray-500 text-xl">Your book awaits your first words...</p>
+                <Book className="w-24 h-24 mx-auto text-gray-800 mb-4" />
+                <p className="text-gray-600 text-xl font-bold uppercase tracking-widest">The vault is silent.</p>
               </div>
             )}
           </motion.div>
@@ -286,37 +289,39 @@ const GiuseppeBook: React.FC = () => {
             className="space-y-6"
           >
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-purple-400">Your Chapters</h2>
+              <h2 className="text-2xl font-black text-purple-400 uppercase tracking-tighter">Sovereign Chapters</h2>
               <Button
                 onClick={() => setShowCreateChapter(!showCreateChapter)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 font-bold"
               >
                 {showCreateChapter ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                {showCreateChapter ? 'Cancel' : 'New Chapter'}
+                {showCreateChapter ? 'Cancel Build' : 'Create New Chapter'}
               </Button>
             </div>
 
             {showCreateChapter && (
-              <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/50">
+              <Card className="bg-gray-900/60 backdrop-blur-2xl border-purple-500/40 shadow-2xl">
                 <CardHeader>
-                  <CardTitle className="text-purple-400">Create New Chapter</CardTitle>
+                  <CardTitle className="text-purple-400 uppercase tracking-widest text-sm">Chapter Construction</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Input
                     value={newChapterTitle}
                     onChange={(e) => setNewChapterTitle(e.target.value)}
                     placeholder="Chapter title..."
-                    className="bg-gray-800 border-purple-500/30"
+                    className="bg-gray-950 border-purple-500/30 text-lg font-bold"
                   />
-                  <p className="text-sm text-gray-400">
-                    Selected {selectedNotes.length} note(s). Click notes in the timeline to add them to this chapter.
-                  </p>
+                  <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <p className="text-xs text-purple-300 font-mono">
+                      STATUS: {selectedNotes.length} node(s) selected for linkage.
+                    </p>
+                  </div>
                   <Button
                     onClick={handleCreateChapter}
                     disabled={!newChapterTitle.trim() || selectedNotes.length === 0}
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-lg font-black italic shadow-lg shadow-purple-500/20"
                   >
-                    Create Chapter
+                    DEPLOY CHAPTER
                   </Button>
                 </CardContent>
               </Card>
@@ -330,14 +335,14 @@ const GiuseppeBook: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <Card
-                    className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30 cursor-pointer hover:border-purple-500/50 transition-all"
+                    className="bg-gray-900/40 backdrop-blur-md border-gray-800 cursor-pointer hover:border-purple-500/40 transition-all"
                     onClick={() => setSelectedChapter(selectedChapter?.title === chapter.title ? null : chapter)}
                   >
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center gap-3">
                           <BookOpen className="w-6 h-6 text-purple-400" />
-                          <span className="text-purple-400">Chapter {idx + 1}: {chapter.title}</span>
+                          <span className="text-purple-400 font-bold">Chapter {idx + 1}: {chapter.title}</span>
                         </span>
                         <ChevronRight
                           className={`w-5 h-5 text-purple-400 transition-transform ${
@@ -353,21 +358,21 @@ const GiuseppeBook: React.FC = () => {
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                         >
-                          <CardContent className="space-y-3">
-                            <p className="text-sm text-gray-400">
-                              Created: {new Date(chapter.createdAt).toLocaleDateString()} • {chapter.notes.length} notes
+                          <CardContent className="space-y-3 pb-6">
+                            <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest border-b border-gray-800 pb-2">
+                              Created: {new Date(chapter.createdAt).toLocaleDateString()} • {chapter.notes.length} notes in mesh
                             </p>
                             {chapter.notes.map(note => (
                               <div
                                 key={note.id}
-                                className="bg-gray-800/50 rounded p-3 border-l-2 border-purple-500/50"
+                                className="bg-gray-950/50 rounded p-4 border-l-2 border-purple-500/50 hover:bg-gray-950 transition-colors"
                               >
-                                <div className="flex items-center gap-2 mb-1 text-xs text-gray-500">
-                                  <span className="capitalize">{note.type}</span>
+                                <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-600 font-mono uppercase">
+                                  <span className="text-purple-400 font-black">{note.type}</span>
                                   <span>•</span>
                                   <span>{new Date(note.timestamp).toLocaleString()}</span>
                                 </div>
-                                <p className="text-gray-300">{note.content}</p>
+                                <p className="text-gray-300 text-sm leading-relaxed">{note.content}</p>
                               </div>
                             ))}
                           </CardContent>
@@ -381,8 +386,8 @@ const GiuseppeBook: React.FC = () => {
 
             {bookChapters.length === 0 && !showCreateChapter && (
               <div className="text-center py-20">
-                <BookOpen className="w-24 h-24 mx-auto text-purple-400/30 mb-4" />
-                <p className="text-gray-500 text-xl mb-4">No chapters yet. Start organizing your notes!</p>
+                <BookOpen className="w-24 h-24 mx-auto text-gray-800 mb-4 opacity-50" />
+                <p className="text-gray-600 text-xl font-black uppercase tracking-tighter">No chapters mapped.</p>
               </div>
             )}
           </motion.div>
@@ -395,11 +400,11 @@ const GiuseppeBook: React.FC = () => {
             animate={{ opacity: 1 }}
             className="space-y-6"
           >
-            <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30">
+            <Card className="bg-gray-900/40 backdrop-blur-xl border-gray-800">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="w-6 h-6 text-purple-400" />
-                  Top Tags
+                <CardTitle className="flex items-center gap-2 text-purple-400 font-black uppercase tracking-widest text-sm">
+                  <Tag className="w-4 h-4" />
+                  Dominant Tags
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -408,44 +413,44 @@ const GiuseppeBook: React.FC = () => {
                     <motion.div
                       key={tag}
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full px-4 py-2 flex items-center gap-2"
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg shadow-purple-500/10"
                     >
-                      <span className="text-white font-medium">#{tag}</span>
-                      <span className="text-white/70 text-sm">({count})</span>
+                      <span className="text-white font-black italic">#{tag}</span>
+                      <span className="text-white/70 text-xs font-mono">[{count}]</span>
                     </motion.div>
                   ))}
                   {topTags.length === 0 && (
-                    <p className="text-gray-500">No tags yet. Add #hashtags to your notes!</p>
+                    <p className="text-gray-600 italic">Cognitive metadata awaiting input.</p>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30">
+            <Card className="bg-gray-900/40 backdrop-blur-xl border-gray-800">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-6 h-6 text-yellow-400" />
-                  Bookmarked Highlights
+                <CardTitle className="flex items-center gap-2 text-yellow-400 font-black uppercase tracking-widest text-sm">
+                  <Star className="w-4 h-4" />
+                  Sovereign Highlights
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {bookmarkedNotes.map(note => (
                   <div
                     key={note.id}
-                    className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded p-4"
+                    className="bg-gradient-to-r from-yellow-500/10 to-transparent border-l-2 border-yellow-500/40 rounded-r p-4"
                   >
-                    <div className="flex items-center gap-2 mb-2 text-xs text-yellow-400">
+                    <div className="flex items-center gap-2 mb-2 text-[10px] font-mono text-yellow-400 uppercase tracking-widest font-black">
                       <Star className="w-3 h-3 fill-yellow-400" />
-                      <span className="capitalize">{note.type}</span>
-                      <span>•</span>
+                      <span>{note.type}</span>
+                      <span className="text-gray-600">//</span>
                       <span>{new Date(note.timestamp).toLocaleString()}</span>
                     </div>
-                    <p className="text-gray-300">{note.content}</p>
+                    <p className="text-gray-300 font-medium italic">"{note.content}"</p>
                   </div>
                 ))}
                 {bookmarkedNotes.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
-                    No bookmarked notes yet. Star your favorites!
+                  <p className="text-gray-600 text-center py-8 italic uppercase tracking-tighter">
+                    No bookmarks detected in the mesh.
                   </p>
                 )}
               </CardContent>
@@ -462,11 +467,10 @@ const GiuseppeBook: React.FC = () => {
           >
             <Button
               onClick={handleExport}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all"
-              size="lg"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_50px_rgba(168,85,247,0.6)] transition-all font-black italic text-lg px-8 py-6 h-auto"
             >
-              <Download className="w-5 h-5 mr-2" />
-              Export Complete Book
+              <Download className="w-6 h-6 mr-3" />
+              EXPORT MANUSCRIPT
             </Button>
           </motion.div>
         )}

@@ -1,6 +1,7 @@
 # GIOVANNI FILE COORDINATOR v1.0
 # "Nothing Vital Lives Below Root"
 # Project: Giuseppe Skyrider / Giovanni Core
+# Pathing Synchronized: Hands now feed directly into the Brain's Vault.
 
 import os
 import shutil
@@ -11,22 +12,17 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from PIL import Image, ExifTags
 
-# ============================================================================
-# ROOT STORAGE PATHING (Single Source of Truth)
-# ============================================================================
-VAULT_DIR = Path(__file__).parent / "vault"
-
 class GiovanniCortex(FileSystemEventHandler):
     def __init__(self, watch_dir, vault_dir):
         self.watch_dir = watch_dir
         self.vault_dir = vault_dir
         
-        # Define where Giovanni routes the assets
+        # Define where Giovanni routes the assets INSIDE Giuseppe's Vault
         self.photo_dir = os.path.join(self.vault_dir, "Photos")
         self.doc_dir = os.path.join(self.vault_dir, "Documents")
         self.media_dir = os.path.join(self.vault_dir, "Media_Assets")
         
-        # Ensure Giovanni's vault exists
+        # Ensure Giovanni's vault structure exists
         for d in [self.photo_dir, self.doc_dir, self.media_dir]:
             os.makedirs(d, exist_ok=True)
 
@@ -71,7 +67,7 @@ class GiovanniCortex(FileSystemEventHandler):
                 
             os.makedirs(folder_path, exist_ok=True)
             
-            # The 'Hands': Move the file
+            # The 'Hands': Move the file into the synchronized vault
             dest_path = os.path.join(folder_path, filename)
             shutil.move(file_path, dest_path)
             print(f"[GIOVANNI CORTEX] Photo Coordinated: {filename} -> {folder_path}")
@@ -105,8 +101,11 @@ def wake_giovanni_eyes(watch_directory, vault_directory):
     observer.join()
 
 if __name__ == "__main__":
-    # Example wiring: Point this at your Mac's Downloads or an iCloud drop folder
+    # Watch your Mac's Downloads or an iCloud drop folder
     WATCH_FOLDER = os.path.expanduser("~/Downloads")
     
-    # Unified execution using the top-level VAULT_DIR
-    wake_giovanni_eyes(WATCH_FOLDER, str(VAULT_DIR))
+    # SYNCHRONIZED PATH: Point Giovanni's hands exactly to Giuseppe's brain
+    # This automatically finds the active project directory and mounts to /vault
+    GIOVANNI_VAULT = str(Path(__file__).parent / "vault")
+    
+    wake_giovanni_eyes(WATCH_FOLDER, GIOVANNI_VAULT)

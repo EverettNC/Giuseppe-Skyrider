@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Image, Sparkles, Calendar, Tag, TrendingUp } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
-import { Button } from './components/ui/button'
+// "Nothing Vital Lives Below Root" - Imports flattened to root directory
+import { Card, CardContent, CardHeader, CardTitle } from './card'
+import { Button } from './button'
 import { useGiovanniStore } from './GiovanniStore'
 
 export type PhotoVibe =
@@ -26,6 +27,7 @@ export interface Photo {
 
 /**
  * GiovanniPhotoCurator - AI-powered photo organization with vibe categorization
+ * Hardware Native: Sovereign asset management for the Carbon-Silicon exchange.
  */
 export function GiovanniPhotoCurator() {
   const [photos, setPhotos] = useState<Photo[]>([])
@@ -42,15 +44,11 @@ export function GiovanniPhotoCurator() {
     { name: 'behind_the_scenes', emoji: '🎬', description: 'Process, realness, transparency' }
   ]
 
-  /**
-   * Load photos from public directory (in a real app, this would scan file system)
-   */
   const loadPhotos = async () => {
     setLoading(true)
 
     try {
-      // Simulated photo library - in production, this would use File System Access API
-      // or read from a designated photo directory
+      // Simulated photo library - routes to the project root assets
       const mockPhotos: Photo[] = [
         {
           id: '1',
@@ -86,7 +84,6 @@ export function GiovanniPhotoCurator() {
 
       setPhotos(mockPhotos)
 
-      // Giovanni's reaction
       speak(
         `Found ${mockPhotos.length} photos in your library. ${mockPhotos.filter(p => p.suggested).length} of them are absolute fire and ready to post.`,
         'swagger'
@@ -98,9 +95,6 @@ export function GiovanniPhotoCurator() {
     }
   }
 
-  /**
-   * Categorize a photo by vibe
-   */
   const categorizePhoto = (photoId: string, vibe: PhotoVibe) => {
     setPhotos(photos.map(photo =>
       photo.id === photoId ? { ...photo, vibe } : photo
@@ -113,9 +107,6 @@ export function GiovanniPhotoCurator() {
     )
   }
 
-  /**
-   * Get Giovanni's suggestion for posting
-   */
   const getSuggestion = () => {
     const topPhotos = photos
       .filter(p => p.suggested)
@@ -144,27 +135,32 @@ export function GiovanniPhotoCurator() {
     : photos.filter(p => p.vibe === selectedVibe)
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
+    <Card className="w-full max-w-4xl bg-gray-950 border-gray-800 text-gray-100">
+      <CardHeader className="border-b border-gray-900 pb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image className="w-6 h-6 text-giovanni-accent" />
-            <CardTitle>Photo Curator</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight uppercase italic">Photo Curator</CardTitle>
           </div>
-          <Button onClick={getSuggestion} size="sm">
+          <Button 
+            onClick={getSuggestion} 
+            size="sm"
+            className="bg-giovanni-accent hover:bg-giovanni-accent/80 text-white font-black italic tracking-widest"
+          >
             <Sparkles className="w-4 h-4 mr-2" />
-            What Should I Post?
+            WHAT SHOULD I POST?
           </Button>
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="pt-6">
         {/* Vibe filters */}
         <div className="flex flex-wrap gap-2 mb-6">
           <Button
             variant={selectedVibe === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedVibe('all')}
+            className={selectedVibe === 'all' ? 'bg-gray-800 text-white' : 'border-gray-800 text-gray-400'}
           >
             All Photos
           </Button>
@@ -174,6 +170,7 @@ export function GiovanniPhotoCurator() {
               variant={selectedVibe === vibe.name ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedVibe(vibe.name)}
+              className={selectedVibe === vibe.name ? 'bg-giovanni-primary text-white border-transparent' : 'border-gray-800 text-gray-500'}
               title={vibe.description}
             >
               {vibe.emoji} {vibe.name.replace(/_/g, ' ')}
@@ -183,13 +180,13 @@ export function GiovanniPhotoCurator() {
 
         {/* Photo grid */}
         {loading ? (
-          <div className="text-center py-12 text-gray-400">
-            Loading your visual library...
+          <div className="text-center py-20 text-gray-600 font-mono uppercase tracking-[0.3em] animate-pulse">
+            Scanning hardware library...
           </div>
         ) : filteredPhotos.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <Image className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p>No photos found for this vibe</p>
+          <div className="text-center py-20 text-gray-700">
+            <Image className="w-16 h-16 mx-auto mb-4 opacity-10" />
+            <p className="uppercase tracking-widest font-bold">No assets found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -211,22 +208,22 @@ export function GiovanniPhotoCurator() {
         )}
 
         {/* Stats bar */}
-        <div className="mt-6 pt-6 border-t border-gray-800 grid grid-cols-3 gap-4 text-center">
+        <div className="mt-8 pt-6 border-t border-gray-900 grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-giovanni-accent">{photos.length}</div>
-            <div className="text-xs text-gray-400">Total Photos</div>
+            <div className="text-2xl font-black text-giovanni-accent tracking-tighter">{photos.length}</div>
+            <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Total Assets</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-giovanni-accent">
+            <div className="text-2xl font-black text-giovanni-accent tracking-tighter">
               {photos.filter(p => p.suggested).length}
             </div>
-            <div className="text-xs text-gray-400">Ready to Post</div>
+            <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Post Ready</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-giovanni-accent">
+            <div className="text-2xl font-black text-giovanni-accent tracking-tighter">
               {new Set(photos.map(p => p.vibe)).size}
             </div>
-            <div className="text-xs text-gray-400">Vibe Categories</div>
+            <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Categorized</div>
           </div>
         </div>
       </CardContent>
@@ -234,9 +231,6 @@ export function GiovanniPhotoCurator() {
   )
 }
 
-/**
- * Individual photo card component
- */
 function PhotoCard({
   photo,
   vibes,
@@ -249,29 +243,27 @@ function PhotoCard({
   const vibeInfo = vibes.find(v => v.name === photo.vibe)
 
   return (
-    <div className="relative group bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-giovanni-accent transition-colors">
-      {/* Placeholder for photo - in production would show actual image */}
-      <div className="aspect-square bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-        <Image className="w-12 h-12 text-gray-600" />
+    <div className="relative group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-giovanni-accent transition-all duration-300">
+      <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center">
+        <Image className="w-12 h-12 text-gray-800 group-hover:scale-110 transition-transform" />
       </div>
 
-      {/* Overlay with info */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <div className="text-xs text-gray-300 mb-2 flex items-center gap-2">
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="text-[10px] font-mono text-gray-400 mb-2 flex items-center gap-2">
             <Calendar className="w-3 h-3" />
             {photo.date.toLocaleDateString()}
           </div>
 
           {photo.engagement_score && (
-            <div className="text-xs text-giovanni-accent mb-2 flex items-center gap-2">
+            <div className="text-xs text-giovanni-accent font-black italic mb-2 flex items-center gap-2">
               <TrendingUp className="w-3 h-3" />
-              {photo.engagement_score}% engagement score
+              {photo.engagement_score}% HIT PROBABILITY
             </div>
           )}
 
           {vibeInfo && (
-            <div className="text-sm font-medium mb-2">
+            <div className="text-sm font-bold mb-2 uppercase text-white tracking-tight">
               {vibeInfo.emoji} {photo.vibe?.replace(/_/g, ' ')}
             </div>
           )}
@@ -280,21 +272,18 @@ function PhotoCard({
             {photo.tags.map(tag => (
               <span
                 key={tag}
-                className="text-xs px-2 py-1 bg-gray-900/80 rounded-full flex items-center gap-1"
+                className="text-[10px] px-2 py-0.5 bg-gray-800/80 text-gray-400 rounded-full font-bold uppercase"
               >
-                <Tag className="w-3 h-3" />
-                {tag}
+                #{tag}
               </span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Suggested badge */}
       {photo.suggested && (
-        <div className="absolute top-2 right-2 bg-giovanni-accent text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-          <Sparkles className="w-3 h-3" />
-          Fire
+        <div className="absolute top-3 right-3 bg-giovanni-accent text-white text-[10px] font-black italic px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,51,102,0.5)]">
+          🔥 FIRE
         </div>
       )}
     </div>

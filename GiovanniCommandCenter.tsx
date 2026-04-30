@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+// "Nothing Vital Lives Below Root" - Direct store access
 import { useGiovanniStore } from './GiovanniStore'
 
 // Support for browser speech recognition
@@ -10,7 +11,9 @@ declare global {
 }
 
 /**
- * Listens for always-on wake phrases so Giovanni can start/stop recording hands-free.
+ * GIOVANNI COMMAND CENTER
+ * Listens for always-on wake phrases so Giuseppe/Giovanni can start/stop 
+ * recording hands-free. This is the paralinguistic intake for the sovereign cortex.
  */
 export function GiovanniCommandCenter() {
   const { speak, setState, isListening } = useGiovanniStore()
@@ -19,9 +22,16 @@ export function GiovanniCommandCenter() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const RecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!RecognitionCtor) return
+    if (!RecognitionCtor) {
+      console.warn('Speech Recognition not supported in this browser environment.')
+      return
+    }
 
+    // Only activate ears if the store's listening state is enabled
     if (!isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
       return
     }
 
@@ -34,20 +44,24 @@ export function GiovanniCommandCenter() {
     const handleCommand = (transcript: string) => {
       const normalized = transcript.toLowerCase().trim()
 
+      // COMMAND: Start Recording
       if (normalized.includes('giovanni start recording')) {
         window.dispatchEvent(new CustomEvent('giovanni-voice-start'))
         setState('listening')
         speak("I'm rolling. Let it spill.", 'swagger')
       }
 
+      // COMMAND: Stop Recording
       if (normalized.includes('giovanni stop recording')) {
         window.dispatchEvent(new CustomEvent('giovanni-voice-stop'))
         setState('thinking')
-        speak('Recording complete. Want me to summarize it?', 'motivational')
+        speak('Recording complete. Locking it into the vault.', 'motivational')
       }
 
+      // COMMAND: Request Summary
       if (normalized.includes('giovanni give me the last summary')) {
         window.dispatchEvent(new CustomEvent('giovanni-request-summary'))
+        speak("Consulting the memory mesh now.", "hype")
       }
     }
 
@@ -60,21 +74,35 @@ export function GiovanniCommandCenter() {
       }
     }
 
-    recognition.onerror = () => {
-      // Restart on glitches so the wake phrase keeps working
-      recognition.stop()
-      recognition.start()
-    }
-
-    recognition.onend = () => {
-      try {
-        recognition.start()
-      } catch (error) {
-        console.warn('Command listener restart failed:', error)
+    recognition.onerror = (event) => {
+      console.error('Command Center Audio Error:', event.error)
+      // Restart on glitches so the wake phrase keeps working without manual intervention
+      if (isListening) {
+        try {
+          recognition.stop()
+          recognition.start()
+        } catch (e) {
+          // Fallback if restart loop breaks
+        }
       }
     }
 
-    recognition.start()
+    recognition.onend = () => {
+      // Maintain sovereign presence: restart listener automatically
+      if (isListening) {
+        try {
+          recognition.start()
+        } catch (error) {
+          console.warn('Command listener restart failed:', error)
+        }
+      }
+    }
+
+    try {
+      recognition.start()
+    } catch (e) {
+      console.error("Failed to start command listener:", e)
+    }
 
     return () => {
       recognition.onresult = null

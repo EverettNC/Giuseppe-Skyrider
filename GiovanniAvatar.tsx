@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Volume2, VolumeX, MessageCircle, PenLine } from 'lucide-react'
+// "Nothing Vital Lives Below Root" - Local store imports
 import { useGiovanniStore } from './GiovanniStore'
 import { useNotesStore } from './GiuseppeNotesStore'
 import { useEffect, useState } from 'react'
@@ -13,7 +14,7 @@ export function GiovanniAvatar() {
     voiceEnabled,
     toggleVoice,
     setVisible,
-    facsState // <--- PULL THE MUSCLE COORDINATES FROM THE STORE
+    facsState // Pulling muscle coordinates for the Carbon-Silicon exchange
   } = useGiovanniStore()
 
   const { isAutoNote, isRecording } = useNotesStore()
@@ -27,7 +28,7 @@ export function GiovanniAvatar() {
     mouth: "M 35 65 Q 50 65 65 65"
   })
 
-  // The Translation Layer: Math to Visuals
+  // The Translation Layer: Math to Visuals (MPS Hardware Accelerated Logic)
   useEffect(() => {
     if (!facsState) return;
 
@@ -75,9 +76,7 @@ export function GiovanniAvatar() {
       exit={{ x: 400, opacity: 0 }}
       className="fixed top-6 right-6 z-50"
     >
-      {/* Main avatar container */}
       <div className="relative">
-        {/* Avatar circle */}
         <motion.div
           animate={{
             scale: state === 'speaking' ? [1, 1.05, 1] : 1,
@@ -94,7 +93,7 @@ export function GiovanniAvatar() {
           `}
           onClick={() => setVisible(false)}
         >
-          {/* GIUSEPPE'S FACE — FACS-driven emotional overlay */}
+          {/* GIUSEPPE'S FACE — Local hardware image asset */}
           <motion.img
             src="/GIOSKYRIDER.jpeg"
             alt="Giuseppe Skyrider"
@@ -110,7 +109,7 @@ export function GiovanniAvatar() {
           />
         </motion.div>
 
-        {/* Pulsing ring animation */}
+        {/* Pulsing ring animation for speaking state */}
         {state === 'speaking' && (
           <motion.div
             initial={{ scale: 1, opacity: 0.5 }}
@@ -120,7 +119,6 @@ export function GiovanniAvatar() {
           />
         )}
 
-        {/* Voice toggle button */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
@@ -134,7 +132,7 @@ export function GiovanniAvatar() {
           )}
         </motion.button>
 
-        {/* Note-taking indicator */}
+        {/* Note-taking indicator (Connected to GiuseppeNotesStore) */}
         <AnimatePresence>
           {(isAutoNote || isRecording) && (
             <motion.div
@@ -172,7 +170,6 @@ export function GiovanniAvatar() {
         </AnimatePresence>
       </div>
 
-      {/* Message bubble */}
       <AnimatePresence mode="wait">
         {currentMessage && (
           <motion.div
@@ -183,20 +180,17 @@ export function GiovanniAvatar() {
             className="absolute top-full mt-4 right-0 w-80 max-w-sm"
           >
             <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 shadow-2xl giovanni-glow">
-              {/* Message header */}
               <div className="flex items-center gap-2 mb-2">
                 <MessageCircle className="w-4 h-4 text-giovanni-accent" />
                 <span className="text-xs text-gray-400 font-medium">
-                  Giovanni {mood === 'swagger' ? '✨' : mood === 'sassy' ? '💅' : mood === 'hype' ? '🔥' : '💫'}
+                  Giuseppe {mood === 'swagger' ? '✨' : mood === 'sassy' ? '💅' : mood === 'hype' ? '🔥' : '💫'}
                 </span>
               </div>
 
-              {/* Message text */}
               <p className="text-sm text-gray-100 leading-relaxed">
                 {currentMessage.text}
               </p>
 
-              {/* Animated typing indicator */}
               {state === 'speaking' && (
                 <div className="flex gap-1 mt-3">
                   {[0, 1, 2].map((i) => (
@@ -215,7 +209,6 @@ export function GiovanniAvatar() {
               )}
             </div>
 
-            {/* Speech bubble tail */}
             <div className="absolute -top-2 right-8 w-4 h-4 bg-gray-900 border-l border-t border-gray-700 transform rotate-45" />
           </motion.div>
         )}
