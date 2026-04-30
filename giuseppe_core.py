@@ -14,6 +14,7 @@ Endpoints:
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Optional, List
 import uuid
@@ -30,6 +31,14 @@ load_dotenv()
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
+
+# ============================================================================
+# ROOT STORAGE PATHING (Single Source of Truth)
+# ============================================================================
+VAULT_DIR = Path(__file__).parent / "vault"
+(VAULT_DIR / "output").mkdir(parents=True, exist_ok=True)
+(VAULT_DIR / "uploads").mkdir(parents=True, exist_ok=True)
+(VAULT_DIR / "avatar_uploads").mkdir(parents=True, exist_ok=True)
 
 # ============================================================================
 # DEPENDENCY SHIELD
@@ -94,7 +103,7 @@ tone_engine_v2 = ChristmanToneEngine()
 #         raise HTTPException(403, "Invalid API Key")
 
 # ============================================================================
-# Models (unchanged)
+# Models
 # ============================================================================
 
 class SierraEmotionSignal(BaseModel):
@@ -155,8 +164,8 @@ async def think(
             if len(audio_bytes) > 100 * 1024 * 1024:  # 100MB limit example
                 raise HTTPException(413, "Audio too large")
 
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False, dir="data/output") as tmp:
+            # Pulled tempfile import to root, aligned with clean architecture
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False, dir=str(VAULT_DIR / "output")) as tmp:
                 tmp.write(audio_bytes)
                 wav_path = tmp.name
 
@@ -212,7 +221,7 @@ async def think(
             logger.error(f"VIRTUS failure: {ve}")
             raise HTTPException(403, "VIRTUS_GATEKEEPER_FAILURE")
 
-        # Memory & Vortex (unchanged)
+        # Memory & Vortex
         llm_response = result.get("output", "ok")
         raw_intensity = carbon_metrics.get('physical_intensity', 1.0) if carbon_metrics else 1.0
         dominant = carbon_metrics.get('dominant_state', 'neutral') if carbon_metrics else "neutral"
@@ -266,8 +275,8 @@ async def speak(request: SpeakRequest):
             logger.error(f"ElevenLabs error: {resp.text}")
             raise HTTPException(500, "Synthesis failed")
 
-        audio_path = Path("data/output") / f"{uuid.uuid4()}.mp3"
-        audio_path.parent.mkdir(parents=True, exist_ok=True)
+        # Routing to VAULT_DIR rather than hardcoded string paths
+        audio_path = VAULT_DIR / "output" / f"{uuid.uuid4()}.mp3"
         audio_path.write_bytes(resp.content)
 
         return FileResponse(audio_path, media_type="audio/mpeg", filename=audio_path.name)
@@ -276,8 +285,6 @@ async def speak(request: SpeakRequest):
         logger.error(f"Synthesis error: {e}", exc_info=True)
         raise HTTPException(500, str(e))
 
-
-# /execute_action and /deny_action unchanged (kept as-is)
 
 @app.post("/train", response_model=TrainingResponse)
 async def train_voice(
@@ -295,7 +302,8 @@ async def train_voice(
         raise HTTPException(400, f"Invalid tier: {tier}")
 
     job_id = str(uuid.uuid4())
-    upload_dir = Path(config.data_dir) / "uploads" / job_id
+    # Secured entirely within the Vault
+    upload_dir = VAULT_DIR / "uploads" / job_id
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     for f in audio_files:
@@ -333,7 +341,8 @@ async def train_avatar(
         raise HTTPException(400, f"Invalid tier: {tier}")
 
     job_id = str(uuid.uuid4())
-    upload_dir = Path(config.data_dir) / "avatar_uploads" / job_id
+    # Secured entirely within the Vault
+    upload_dir = VAULT_DIR / "avatar_uploads" / job_id
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     for f in image_files:
@@ -358,10 +367,6 @@ async def train_avatar(
         "message": f"Uploaded {saved_count} images – processing all (no limit)."
     }
 
-
-# /voicepacks, /alpha-vox/voice-gen, /health, /, startup/shutdown unchanged
-# Fixed import in /alpha-vox/voice-gen:
-# Change: from engines.shorty_voice_engine import ShortyVoiceEngine  # absolute
 
 if __name__ == "__main__":
     uvicorn.run(

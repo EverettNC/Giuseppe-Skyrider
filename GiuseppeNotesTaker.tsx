@@ -18,8 +18,9 @@ import {
   Lightbulb,
   MessageCircle
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
-import { Button } from './components/ui/button';
+// "Nothing Vital Lives Below Root" - Imports flattened to root directory
+import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Button } from './button';
 
 // Speech Recognition types
 declare global {
@@ -53,61 +54,46 @@ const GiuseppeNotesTaker: React.FC = () => {
   const [filterType, setFilterType] = useState<Note['type'] | 'all'>('all');
 
   const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = true;
         recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US';
 
         recognitionRef.current.onresult = (event: any) => {
-          let interim = '';
-          let final = '';
+          let currentTranscript = '';
+          let currentInterim = '';
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
-              final += transcript + ' ';
+              currentTranscript += event.results[i][0].transcript;
             } else {
-              interim += transcript;
+              currentInterim += event.results[i][0].transcript;
             }
           }
 
-          if (final) {
-            setTranscript((prev) => prev + final);
-
-            // Auto-save note after 3 seconds of silence
-            if (isAutoNote) {
-              setTimeout(() => {
-                if (final.trim()) {
-                  saveQuickNote(final.trim(), 'voice');
-                }
-              }, 3000);
-            }
+          setInterimTranscript(currentInterim);
+          if (currentTranscript) {
+            setTranscript((prev) => prev + ' ' + currentTranscript);
+            resetSilenceTimer();
           }
-
-          setInterimTranscript(interim);
         };
 
         recognitionRef.current.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
-          if (event.error === 'no-speech') {
-            // Restart if no speech detected
-            if (isListening) {
-              recognitionRef.current.start();
-            }
-          }
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+          stopRecording();
         };
 
         recognitionRef.current.onend = () => {
-          if (isListening) {
-            // Auto-restart when auto-note is enabled
+          if (isRecording) {
             recognitionRef.current.start();
+          } else {
+            setIsListening(false);
           }
         };
       }
@@ -117,398 +103,269 @@ const GiuseppeNotesTaker: React.FC = () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
     };
-  }, [isAutoNote, isListening]);
+  }, [isRecording]);
+
+  const resetSilenceTimer = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
+    // Auto-save after 3 seconds of silence if auto-note is on
+    if (isAutoNote) {
+      silenceTimerRef.current = setTimeout(() => {
+        handleSaveNote();
+      }, 3000);
+    }
+  };
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
-      speak("Sorry boss, your browser doesn't support voice recognition. But I'm still here taking notes!", 'sassy');
-      return;
-    }
-
-    if (!isListening) {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      stopRecording();
+      if (transcript.trim()) {
+        handleSaveNote();
+      }
+    } else {
+      setTranscript('');
+      setInterimTranscript('');
+      recognitionRef.current?.start();
       setIsListening(true);
       startRecording();
-      recognitionRef.current.start();
-      speak("I'm listening, boss. Speak your mind, I got you.", 'swagger');
-    } else {
-      setIsListening(false);
-      const duration = stopRecording();
-      recognitionRef.current.stop();
-
-      if (transcript.trim()) {
-        saveNote(transcript.trim(), selectedType, duration);
-        speak("Got it all down. That was fire, boss.", 'hype');
-        setTranscript('');
-      }
-      setInterimTranscript('');
     }
   };
 
-  const saveNote = (content: string, type: Note['type'], duration?: number) => {
-    if (!content.trim()) return;
-
-    const mood = useGiovanniStore.getState().mood;
-
-    addNote({
-      content,
-      type,
-      mood,
-      tags: extractTags(content),
-      bookmarked: false,
-      recordingDuration: duration,
-    });
-
-    addMessage({
-      text: `Noted! Filed under "${type}". ${getMotivationalQuip()}`,
-      mood,
-    });
-  };
-
-  const saveQuickNote = (content: string, type: Note['type']) => {
-    if (!content.trim() || content.length < 10) return; // Ignore very short phrases
-
-    const mood = useGiovanniStore.getState().mood;
+  const handleSaveNote = () => {
+    const finalContent = transcript.trim();
+    if (!finalContent) return;
 
     addNote({
-      content,
-      type,
-      mood,
-      tags: extractTags(content),
+      content: finalContent,
+      type: selectedType,
+      mood: 'swagger',
+      tags: [],
       bookmarked: false,
     });
+
+    speak(`Caught that ${selectedType}. It's in the vault.`, 'swagger');
+
+    setTranscript('');
+    setInterimTranscript('');
   };
 
-  const extractTags = (content: string): string[] => {
-    const tags: string[] = [];
+  const filteredNotes = notes
+    .filter(n => filterType === 'all' || n.type === filterType)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    // Extract hashtags
-    const hashtagMatches = content.match(/#\w+/g);
-    if (hashtagMatches) {
-      tags.push(...hashtagMatches.map(tag => tag.slice(1)));
+  const getTypeIcon = (type: Note['type']) => {
+    switch (type) {
+      case 'voice': return <Mic className="w-4 h-4 text-blue-400" />;
+      case 'idea': return <Lightbulb className="w-4 h-4 text-yellow-400" />;
+      case 'observation': return <Eye className="w-4 h-4 text-green-400" />;
+      case 'memory': return <Brain className="w-4 h-4 text-purple-400" />;
+      case 'reminder': return <Zap className="w-4 h-4 text-giovanni-accent" />;
     }
-
-    // Auto-tag based on keywords
-    const keywords: { [key: string]: string[] } = {
-      work: ['client', 'project', 'deadline', 'meeting', 'call'],
-      creative: ['idea', 'creative', 'inspiration', 'design', 'art'],
-      personal: ['feel', 'think', 'remember', 'note to self'],
-      health: ['medication', 'water', 'exercise', 'sleep', 'health'],
-      social: ['post', 'content', 'tiktok', 'instagram', 'video'],
-    };
-
-    const lowerContent = content.toLowerCase();
-    Object.entries(keywords).forEach(([tag, words]) => {
-      if (words.some(word => lowerContent.includes(word))) {
-        tags.push(tag);
-      }
-    });
-
-    return [...new Set(tags)]; // Remove duplicates
-  };
-
-  const getMotivationalQuip = (): string => {
-    const quips = [
-      "You're on fire today! 🔥",
-      "That's going in the book!",
-      "Future you is gonna thank present you.",
-      "I see you building that empire!",
-      "This is the content right here.",
-      "Your brain is a goldmine, boss.",
-    ];
-    return quips[Math.floor(Math.random() * quips.length)];
-  };
-
-  const handleExport = () => {
-    const markdown = exportToMarkdown();
-    const blob = new Blob([markdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `giuseppe-notes-${new Date().toISOString().split('T')[0]}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    speak("Your book has been downloaded! Look at all that wisdom, boss.", 'hype');
-  };
-
-  const filteredNotes = filterType === 'all'
-    ? notes
-    : notes.filter(note => note.type === filterType);
-
-  const typeIcons: { [key in Note['type']]: React.ReactNode } = {
-    voice: <Mic className="w-4 h-4" />,
-    observation: <Eye className="w-4 h-4" />,
-    reminder: <Zap className="w-4 h-4" />,
-    idea: <Lightbulb className="w-4 h-4" />,
-    memory: <Heart className="w-4 h-4" />,
-  };
-
-  const typeColors: { [key in Note['type']]: string } = {
-    voice: 'from-purple-500 to-pink-500',
-    observation: 'from-blue-500 to-cyan-500',
-    reminder: 'from-yellow-500 to-orange-500',
-    idea: 'from-green-500 to-emerald-500',
-    memory: 'from-red-500 to-pink-500',
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 p-6">
-      {/* Magical background effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-20"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-20"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.3, 0.2, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-      </div>
+    <div className="flex h-screen bg-gray-950 text-gray-100 p-6 overflow-hidden">
+      {/* Left Column: Input & Controls */}
+      <div className="w-1/3 flex flex-col gap-6 pr-6 border-r border-gray-800">
+        <div>
+          <h1 className="text-3xl font-bold text-giovanni-primary mb-2 flex items-center gap-2">
+            <Book className="w-8 h-8" />
+            Giuseppe Skyrider
+          </h1>
+          <p className="text-gray-400 text-sm">Sovereign Note Taker & Cognitive Vault</p>
+        </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Brain className="w-10 h-10 text-purple-400" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              Giuseppe's Memory Bank
-            </h1>
-            <Sparkles className="w-10 h-10 text-pink-400" />
-          </div>
-          <p className="text-gray-400 text-lg">
-            I'm always watching, always learning, always taking notes for your book.
-          </p>
-        </motion.div>
-
-        {/* Recording Control Panel */}
-        <Card className="mb-8 bg-gray-900/50 backdrop-blur-xl border-purple-500/30">
+        <Card className="flex-1 flex flex-col bg-gray-900/50">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <MessageCircle className="w-6 h-6 text-purple-400" />
-                Voice Capture
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-normal text-gray-400">Auto-Note</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleAutoNote}
-                  className={`${isAutoNote ? 'text-green-400' : 'text-gray-500'}`}
-                >
-                  {isAutoNote ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </Button>
-              </div>
+            <CardTitle className="flex justify-between items-center text-lg">
+              Capture Thought
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleAutoNote}
+                className={isAutoNote ? 'text-giovanni-accent' : 'text-gray-500'}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Auto-Catch
+              </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Recording Button */}
-              <div className="flex justify-center">
-                <motion.button
-                  onClick={toggleListening}
-                  className={`relative w-32 h-32 rounded-full flex items-center justify-center ${
-                    isListening
-                      ? 'bg-gradient-to-br from-red-500 to-pink-500'
-                      : 'bg-gradient-to-br from-purple-500 to-pink-500'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={isListening ? {
-                    boxShadow: [
-                      '0 0 0 0 rgba(236, 72, 153, 0.7)',
-                      '0 0 0 20px rgba(236, 72, 153, 0)',
-                    ],
-                  } : {}}
-                  transition={{
-                    duration: 1.5,
-                    repeat: isListening ? Infinity : 0,
-                  }}
+          <CardContent className="flex-1 flex flex-col gap-4">
+            {/* Type Selector */}
+            <div className="flex flex-wrap gap-2">
+              {(['voice', 'idea', 'observation', 'memory', 'reminder'] as Note['type'][]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1
+                    ${selectedType === type
+                      ? 'bg-gray-800 text-white border border-gray-600'
+                      : 'bg-gray-950 text-gray-400 border border-transparent hover:bg-gray-900'
+                    }`}
                 >
-                  {isListening ? (
-                    <MicOff className="w-12 h-12 text-white" />
-                  ) : (
-                    <Mic className="w-12 h-12 text-white" />
-                  )}
-                </motion.button>
-              </div>
+                  {getTypeIcon(type)}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
 
-              {/* Live Transcript */}
+            {/* Active Recording Area */}
+            <div className="flex-1 bg-gray-950 rounded-lg p-4 relative overflow-y-auto border border-gray-800">
+              {transcript ? (
+                <div className="space-y-2">
+                  <p className="text-gray-200 leading-relaxed">{transcript}</p>
+                  <p className="text-gray-500 italic">{interimTranscript}</p>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-600 flex-col gap-4">
+                  <MicOff className="w-12 h-12 opacity-20" />
+                  <p>Silence.</p>
+                </div>
+              )}
+
+              {/* Recording Indicator */}
               <AnimatePresence>
-                {(isListening || transcript || interimTranscript) && (
+                {isListening && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-gray-800/50 rounded-lg p-4 min-h-24"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute top-4 right-4 flex items-center gap-2"
                   >
-                    <p className="text-gray-300">
-                      {transcript}
-                      <span className="text-purple-400">{interimTranscript}</span>
-                      {isListening && <span className="animate-pulse">|</span>}
-                    </p>
+                    <span className="text-xs text-red-400 font-medium tracking-widest uppercase">Recording</span>
+                    <motion.div
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="w-2 h-2 rounded-full bg-red-500"
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
 
-              {/* Note Type Selector */}
-              <div className="flex gap-2 justify-center flex-wrap">
-                {(['voice', 'observation', 'reminder', 'idea', 'memory'] as Note['type'][]).map((type) => (
-                  <Button
-                    key={type}
-                    variant={selectedType === type ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setSelectedType(type)}
-                    className={`${
-                      selectedType === type
-                        ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                        : 'text-gray-400'
-                    }`}
-                  >
-                    {typeIcons[type]}
-                    <span className="ml-2 capitalize">{type}</span>
-                  </Button>
-                ))}
-              </div>
+            {/* Main Controls */}
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                onClick={toggleListening}
+                variant={isListening ? 'destructive' : 'default'}
+                className="h-14 text-lg font-semibold tracking-wide"
+              >
+                {isListening ? (
+                  <>
+                    <MicOff className="w-5 h-5 mr-2" /> Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-5 h-5 mr-2" /> Start Recording
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleSaveNote}
+                disabled={!transcript.trim()}
+                className="h-14 bg-gray-800 hover:bg-gray-700 text-white text-lg font-semibold tracking-wide"
+              >
+                <Bookmark className="w-5 h-5 mr-2" /> Lock It In
+              </Button>
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Notes Display */}
-        <Card className="bg-gray-900/50 backdrop-blur-xl border-purple-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Book className="w-6 h-6 text-purple-400" />
-                Your Notes ({filteredNotes.length})
-              </div>
-              <div className="flex gap-2">
-                {/* Filter Buttons */}
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as Note['type'] | 'all')}
-                  className="bg-gray-800 text-gray-300 rounded px-3 py-1 text-sm border border-purple-500/30"
-                >
-                  <option value="all">All Types</option>
-                  <option value="voice">Voice</option>
-                  <option value="observation">Observations</option>
-                  <option value="reminder">Reminders</option>
-                  <option value="idea">Ideas</option>
-                  <option value="memory">Memories</option>
-                </select>
+      {/* Right Column: Vault / History */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilterType('all')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${filterType === 'all' ? 'bg-giovanni-primary text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
+            >
+              All Notes
+            </button>
+            <button
+              onClick={() => setFilterType('idea')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${filterType === 'idea' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
+            >
+              Ideas
+            </button>
+            <button
+              onClick={() => setFilterType('memory')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${filterType === 'memory' ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
+            >
+              Memories
+            </button>
+          </div>
+          
+          <div className="flex gap-4">
+            <Button variant="ghost" onClick={() => setShowNotes(!showNotes)} className="text-gray-400">
+              {showNotes ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleExport}
-                  disabled={notes.length === 0}
-                  className="text-purple-400 hover:text-purple-300"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Book
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowNotes(!showNotes)}
-                  className="text-purple-400"
-                >
-                  {showNotes ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="flex-1 bg-transparent border-none shadow-none overflow-hidden flex flex-col">
+          <CardContent className="flex-1 overflow-y-auto pr-4 p-0 space-y-4">
             <AnimatePresence>
               {showNotes && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-3 max-h-[600px] overflow-y-auto"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-4"
                 >
                   {filteredNotes.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                      <p>No notes yet. Start talking, I'm listening!</p>
+                    <div className="text-center py-20 text-gray-600">
+                      <Book className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                      <p className="text-lg">The vault is empty.</p>
+                      <p className="text-sm">Start recording to lay down reality.</p>
                     </div>
                   ) : (
                     filteredNotes.map((note) => (
                       <motion.div
                         key={note.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className={`bg-gradient-to-r ${typeColors[note.type]} p-0.5 rounded-lg`}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`p-5 rounded-lg border ${note.bookmarked ? 'bg-gray-800/80 border-giovanni-accent' : 'bg-gray-900/40 border-gray-800 hover:bg-gray-900/60'}`}
                       >
-                        <div className="bg-gray-800 rounded-lg p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                {typeIcons[note.type]}
-                                <span className="text-xs text-purple-400 capitalize">
-                                  {note.type}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(note.timestamp).toLocaleString()}
-                                </span>
-                                {note.recordingDuration && (
-                                  <span className="text-xs text-gray-500">
-                                    ({Math.round(note.recordingDuration)}s)
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-gray-300 mb-2">{note.content}</p>
-                              {note.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {note.tags.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded"
-                                    >
-                                      #{tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              {getTypeIcon(note.type)}
+                              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                {note.type}
+                              </span>
+                              <span className="text-xs text-gray-600">
+                                {new Date(note.timestamp).toLocaleString()}
+                              </span>
                             </div>
-                            <div className="flex gap-1">
+                            <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                              {note.content}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex gap-2">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleBookmark(note.id)}
-                                className={note.bookmarked ? 'text-yellow-400' : 'text-gray-500'}
+                                className={note.bookmarked ? 'text-giovanni-accent' : 'text-gray-500 hover:text-gray-300'}
                               >
-                                <Bookmark className="w-4 h-4" />
+                                <Bookmark className={`w-4 h-4 ${note.bookmarked ? 'fill-current' : ''}`} />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => deleteNote(note.id)}
-                                className="text-red-400 hover:text-red-300"
+                                className="text-gray-600 hover:text-red-400 hover:bg-red-400/10"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>

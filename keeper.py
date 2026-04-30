@@ -14,7 +14,7 @@ from pathlib import Path
 import json
 from datetime import datetime
 import numpy as np
-import pickle
+import io
 
 from stillhere.core.utils import ImageUtils, VideoUtils
 from stillhere.core.encryption import Encryption
@@ -25,6 +25,7 @@ class MemoryKeeper:
     Encrypted storage manager for photos and videos.
 
     Keeps your memories safe with AES-256 encryption.
+    Hardware Native: Pickle completely removed for security.
 
     Example:
         >>> keeper = MemoryKeeper(encryption_passphrase="your-secret-passphrase")
@@ -115,8 +116,10 @@ class MemoryKeeper:
             photo_array = photo
             original_name = "array"
 
-        # Serialize photo
-        photo_bytes = pickle.dumps(photo_array)
+        # Serialize photo safely (NO PICKLE)
+        buffer = io.BytesIO()
+        np.save(buffer, photo_array, allow_pickle=False)
+        photo_bytes = buffer.getvalue()
 
         # Encrypt
         encrypted_data = self.encryption.encrypt(photo_bytes)
@@ -176,9 +179,10 @@ class MemoryKeeper:
         # Decrypt
         try:
             photo_bytes = self.encryption.decrypt(encrypted_data)
-            photo_array = pickle.loads(photo_bytes)
+            buffer = io.BytesIO(photo_bytes)
+            photo_array = np.load(buffer, allow_pickle=False)
         except Exception as e:
-            raise ValueError(f"Decryption failed. Wrong passphrase? Error: {e}")
+            raise ValueError(f"Decryption or loading failed. Wrong passphrase or corrupted file? Error: {e}")
 
         print(f"✓ Photo loaded and decrypted")
         return photo_array
@@ -217,13 +221,11 @@ class MemoryKeeper:
         else:
             frames = video
 
-        # Serialize frames
-        video_data = {
-            "frames": frames,
-            "fps": fps,
-            "num_frames": len(frames)
-        }
-        video_bytes = pickle.dumps(video_data)
+        # Serialize frames securely as compressed numpy arrays (NO PICKLE)
+        frames_array = np.array(frames)
+        buffer = io.BytesIO()
+        np.savez_compressed(buffer, frames=frames_array)
+        video_bytes = buffer.getvalue()
 
         # Encrypt
         encrypted_data = self.encryption.encrypt(video_bytes)
@@ -284,10 +286,12 @@ class MemoryKeeper:
         # Decrypt
         try:
             video_bytes = self.encryption.decrypt(encrypted_data)
-            video_data = pickle.loads(video_bytes)
-            frames = video_data["frames"]
+            buffer = io.BytesIO(video_bytes)
+            # Load securely, block arbitrary object execution
+            with np.load(buffer, allow_pickle=False) as data:
+                frames = list(data['frames'])
         except Exception as e:
-            raise ValueError(f"Decryption failed. Wrong passphrase? Error: {e}")
+            raise ValueError(f"Decryption or loading failed. Wrong passphrase or corrupted file? Error: {e}")
 
         print(f"✓ Memory loaded and decrypted ({len(frames)} frames)")
         return frames

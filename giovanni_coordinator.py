@@ -6,9 +6,15 @@ import os
 import shutil
 import time
 from datetime import datetime
+from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from PIL import Image, ExifTags
+
+# ============================================================================
+# ROOT STORAGE PATHING (Single Source of Truth)
+# ============================================================================
+VAULT_DIR = Path(__file__).parent / "vault"
 
 class GiovanniCortex(FileSystemEventHandler):
     def __init__(self, watch_dir, vault_dir):
@@ -101,6 +107,6 @@ def wake_giovanni_eyes(watch_directory, vault_directory):
 if __name__ == "__main__":
     # Example wiring: Point this at your Mac's Downloads or an iCloud drop folder
     WATCH_FOLDER = os.path.expanduser("~/Downloads")
-    GIOVANNI_VAULT = os.path.expanduser("~/Giovanni_Organized")
     
-    wake_giovanni_eyes(WATCH_FOLDER, GIOVANNI_VAULT)
+    # Unified execution using the top-level VAULT_DIR
+    wake_giovanni_eyes(WATCH_FOLDER, str(VAULT_DIR))

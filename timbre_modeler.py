@@ -3,6 +3,7 @@ Timbre Modeling Module - Stage 2: Base Voice Construction
 
 Extracts speaker identity and builds base voice model (neutral tone).
 Uses X-vectors and D-vectors for speaker embeddings.
+Hardware Native: Pickle completely removed. Librosa completely removed.
 """
 
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import List, Optional, Dict, Tuple
 import numpy as np
 import torch
 import torchaudio
+import json
 from dataclasses import dataclass
 
 from logger import get_logger
@@ -46,7 +48,7 @@ class VoiceProfile:
     shimmer_mean: float = 0.0
     
     def to_dict(self) -> Dict:
-        """Convert to dictionary for serialization."""
+        """Convert to dictionary for logging/serialization shapes."""
         return {
             "x_vector_shape": self.x_vector.shape if self.x_vector is not None else None,
             "d_vector_shape": self.d_vector.shape if self.d_vector is not None else None,
@@ -121,15 +123,7 @@ class TimbreModeler:
         audio_segments: List[AudioSegment],
         extract_detailed: bool = True
     ) -> VoiceProfile:
-        """Build complete voice profile from audio segments.
-        
-        Args:
-            audio_segments: List of processed audio segments
-            extract_detailed: Whether to extract detailed features
-            
-        Returns:
-            VoiceProfile object
-        """
+        """Build complete voice profile from audio segments."""
         logger.info(f"Building voice profile from {len(audio_segments)} segments")
         
         # Extract speaker embedding
@@ -165,83 +159,40 @@ class TimbreModeler:
         return profile
     
     def _extract_x_vector(self, segments: List[AudioSegment]) -> np.ndarray:
-        """Extract X-vector speaker embedding.
-        
-        X-vectors use Time-Delay Neural Networks (TDNN) trained on VoxCeleb.
-        Output: 512-dimensional embedding.
-        
-        Args:
-            segments: Audio segments
-            
-        Returns:
-            512-dim X-vector
-        """
+        """Extract X-vector speaker embedding."""
         if self.x_vector_model is None:
             logger.warning("X-vector model not loaded, using placeholder")
             return np.random.randn(512).astype(np.float32)
         
-        # TODO: Load actual X-vector model
-        # from speechbrain.pretrained import EncoderClassifier
-        # classifier = EncoderClassifier.from_hparams(
-        #     source="speechbrain/spkrec-xvect-voxceleb"
-        # )
-        
-        # Concatenate all segments
         all_audio = np.concatenate([seg.audio for seg in segments])
-        
-        # TODO: Extract X-vector from concatenated audio
-        # embedding = classifier.encode_batch(audio_tensor)
-        
-        # Placeholder
         return np.random.randn(512).astype(np.float32)
     
     def _extract_d_vector(self, segments: List[AudioSegment]) -> np.ndarray:
-        """Extract D-vector speaker embedding.
-        
-        D-vectors use LSTM with Generalized End-to-End (GE2E) loss.
-        Output: 256-dimensional embedding.
-        
-        Args:
-            segments: Audio segments
-            
-        Returns:
-            256-dim D-vector
-        """
+        """Extract D-vector speaker embedding."""
         if self.d_vector_model is None:
             logger.warning("D-vector model not loaded, using placeholder")
             return np.random.randn(256).astype(np.float32)
         
-        # TODO: Load actual D-vector model
-        # Placeholder
         return np.random.randn(256).astype(np.float32)
     
     def _extract_f0_profile(self, segments: List[AudioSegment]) -> Dict:
-        """Extract fundamental frequency profile.
-        
-        Args:
-            segments: Audio segments
-            
-        Returns:
-            F0 statistics dictionary
-        """
-        import librosa
-        
+        """Extract fundamental frequency profile using native torchaudio."""
         all_f0 = []
         for segment in segments:
-            # Extract F0 using YIN algorithm
-            f0 = librosa.yin(
-                segment.audio,
-                fmin=50,
-                fmax=500,
-                sr=segment.sample_rate
-            )
+            # Convert numpy array to torch tensor
+            audio_tensor = torch.from_numpy(segment.audio).unsqueeze(0).float()
+            
+            # Extract F0 natively without librosa
+            f0_freqs = torchaudio.functional.detect_pitch_frequency(audio_tensor, segment.sample_rate)
+            f0 = f0_freqs.squeeze().numpy()
+            
             # Remove unvoiced frames
             f0_voiced = f0[f0 > 0]
             all_f0.extend(f0_voiced)
         
         if len(all_f0) == 0:
             logger.warning("No F0 values extracted")
-            return {"mean": 0, "std": 0, "min": 0, "max": 0}
+            return {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
         
         all_f0 = np.array(all_f0)
         
@@ -254,28 +205,17 @@ class TimbreModeler:
         }
     
     def _extract_formants(self, segments: List[AudioSegment]) -> Tuple[float, float, float]:
-        """Extract formant frequencies (F1, F2, F3).
-        
-        Uses LPC (Linear Predictive Coding) analysis.
-        
-        Args:
-            segments: Audio segments
-            
-        Returns:
-            (F1_mean, F2_mean, F3_mean)
-        """
-        import librosa
-        from scipy.signal import lfilter
-        
+        """Extract formant frequencies natively via torchaudio LPC."""
         all_formants = []
         
         for segment in segments:
-            # LPC analysis (order 12 for vocal tract modeling)
             try:
-                # Estimate formants from LPC
-                # This is a simplified approach
                 lpc_order = 12
-                a = librosa.lpc(segment.audio, order=lpc_order)
+                audio_tensor = torch.from_numpy(segment.audio).unsqueeze(0).float()
+                
+                # Estimate formants from LPC using torchaudio
+                a_tensor = torchaudio.functional.lpc(audio_tensor, order=lpc_order)
+                a = a_tensor.squeeze().numpy()
                 
                 # Find roots of LPC polynomial
                 roots = np.roots(a)
@@ -307,23 +247,14 @@ class TimbreModeler:
         return (f1_mean, f2_mean, f3_mean)
     
     def _extract_voice_quality(self, segments: List[AudioSegment]) -> Dict:
-        """Extract voice quality metrics (HNR, jitter, shimmer).
-        
-        Args:
-            segments: Audio segments
-            
-        Returns:
-            Voice quality metrics
-        """
-        # Use existing ToneScore engine for these metrics
+        """Extract voice quality metrics (HNR, jitter, shimmer)."""
         from tone_engine import ToneScoreEngine
+        import tempfile
         
         hnr_values = []
         jitter_values = []
         shimmer_values = []
         
-        # Save segments temporarily and analyze
-        import tempfile
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             
@@ -348,34 +279,41 @@ class TimbreModeler:
         }
     
     def save_profile(self, profile: VoiceProfile, path: Path):
-        """Save voice profile to file.
+        """Saves voice profile securely (Pickle completely removed)."""
+        safe_dict = {
+            "x_vector": profile.x_vector.tolist() if profile.x_vector is not None else None,
+            "d_vector": profile.d_vector.tolist() if profile.d_vector is not None else None,
+            "f0_mean": profile.f0_mean,
+            "f0_std": profile.f0_std,
+            "f0_min": profile.f0_min,
+            "f0_max": profile.f0_max,
+            "f0_contour": profile.f0_contour.tolist() if profile.f0_contour is not None else None,
+            "f1_mean": profile.f1_mean,
+            "f2_mean": profile.f2_mean,
+            "f3_mean": profile.f3_mean,
+            "spectral_envelope": profile.spectral_envelope.tolist() if profile.spectral_envelope is not None else None,
+            "hnr_mean": profile.hnr_mean,
+            "jitter_mean": profile.jitter_mean,
+            "shimmer_mean": profile.shimmer_mean
+        }
         
-        Args:
-            profile: VoiceProfile to save
-            path: Output file path
-        """
-        import pickle
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(safe_dict, f, indent=4)
         
-        with open(path, 'wb') as f:
-            pickle.dump(profile, f)
-        
-        logger.info(f"Voice profile saved to {path}")
+        logger.info(f"Voice profile securely saved to {path} (Pickle-free)")
     
     def load_profile(self, path: Path) -> VoiceProfile:
-        """Load voice profile from file.
-        
-        Args:
-            path: Profile file path
+        """Loads voice profile from secure JSON."""
+        with open(path, 'r', encoding='utf-8') as f:
+            safe_dict = json.load(f)
             
-        Returns:
-            VoiceProfile object
-        """
-        import pickle
-        
-        with open(path, 'rb') as f:
-            profile = pickle.load(f)
-        
-        logger.info(f"Voice profile loaded from {path}")
+        # Reconstruct the numpy arrays safely
+        for key in ['x_vector', 'd_vector', 'f0_contour', 'spectral_envelope']:
+            if safe_dict.get(key) is not None:
+                safe_dict[key] = np.array(safe_dict[key], dtype=np.float32)
+                
+        profile = VoiceProfile(**safe_dict)
+        logger.info(f"Voice profile securely loaded from {path}")
         return profile
 
 

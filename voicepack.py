@@ -376,3 +376,4 @@ if __name__ == "__main__":
     # Validate
     is_valid = builder.validate(voicepack_path)
     print(f"Valid: {is_valid}")
+
