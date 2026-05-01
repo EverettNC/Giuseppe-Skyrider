@@ -216,7 +216,8 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   think: async (text) => {
     set({ state: 'thinking' })
     try {
-      const apiUrl = (import.meta as any).env.VITE_TTS_API_URL?.replace('/speak', '/think') || 'http://localhost:8001/api/think';
+      const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:8001';
+      const apiUrl = `${baseUrl}/api/think`;
       
       const formData = new FormData();
       formData.append('text', text);

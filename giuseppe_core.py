@@ -84,9 +84,9 @@ app = FastAPI(
 # Tightened CORS – UPDATE origins to your real frontend domains in production!
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://christman.ai", "https://your-frontend.com"],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
