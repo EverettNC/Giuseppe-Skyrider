@@ -16,19 +16,27 @@ import {
   MicOff
 } from 'lucide-react'
 import { useGiovanniStore } from './GiovanniStore'
-import GiovanniAvatar from './GiovanniAvatar' 
+
+// PERSISTENCE & AVATAR (Named Exports)
+import { GiovanniAvatar } from './GiovanniAvatar' 
 import { GiovanniMobileCompanion } from './GiovanniMobileCompanion'
-import { GiovanniAnalyticsDashboard } from './GiovanniAnalyticsDashboard'
 import { GiovanniCommandCenter } from './GiovanniCommandCenter'
 import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from './GiovanniReminders'
+
+// DASHBOARD CORE (Default Export)
+import GiovanniAnalyticsDashboard from './GiovanniAnalyticsDashboard' 
+
+// MODULES (Named Exports - FIXED with curly braces)
 import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
-import { GiovanniSocialMedia } from './GiovanniSocialMedia'
+import GiovanniSocialMedia from './GiovanniSocialMedia'; 
 import { GiovanniStudioOrganizer } from './GiovanniStudioOrganizer'
 import { GiovanniMusicStudio } from './GiovanniMusicStudio'
+
+// GIUSEPPE BACKEND UI (Mixed)
 import { GiuseppePanel } from './GiuseppePanel'
 import GiuseppeNotesTaker from './GiuseppeNotesTaker'
 import GiuseppeBook from './GiuseppeBook'
-import { Button } from './Button' // UPDATED: Path now at root
+import { Button } from './Button' 
 
 type View = 'dashboard' | 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book' | 'music' | 'mobile'
 
