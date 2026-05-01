@@ -13,7 +13,8 @@ import {
   Smartphone,
   LayoutDashboard,
   Mic,
-  MicOff
+  MicOff,
+  Play
 } from 'lucide-react'
 import { useGiovanniStore } from './GiovanniStore'
 
@@ -43,7 +44,37 @@ type View = 'dashboard' | 'schedule' | 'photos' | 'social' | 'studio' | 'notes' 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('schedule')
   const [menuOpen, setMenuOpen] = useState(false)
-  const { isListening, toggleListening } = useGiovanniStore()
+  const { isListening, toggleListening, audioInitialized, initializeAudio } = useGiovanniStore()
+
+  if (!audioInitialized) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-gray-100">
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-amber-900/20 pointer-events-none" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 flex flex-col items-center gap-8"
+        >
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-purple-400 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent mb-6 filter drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">
+              Giovanni Skyrider
+            </h1>
+            <p className="text-xl text-gray-400 max-w-md mx-auto">
+              Ready to initialize audio systems for your session.
+            </p>
+          </div>
+          <Button 
+            onClick={initializeAudio}
+            size="lg"
+            className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-8 px-16 rounded-full text-2xl shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(168,85,247,0.8)] border border-purple-400/30 flex items-center gap-4"
+          >
+            <Play className="w-8 h-8 fill-current" />
+            Start Session
+          </Button>
+        </motion.div>
+      </div>
+    )
+  }
 
   useMorningMotivation()
   useHydrationReminder()

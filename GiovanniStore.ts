@@ -59,6 +59,8 @@ interface GiovanniStore {
   setVolume: (volume: number) => void
   toggleListening: () => void
   setFacsState: (facs: FacsBlendshapes) => void
+  audioInitialized: boolean
+  initializeAudio: () => Promise<void>
 }
 
 export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
@@ -73,6 +75,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   volume: 0.8,
   isListening: false,
   facsState: null,
+  audioInitialized: false,
 
   // Actions
   setMood: (mood) => set({ mood }),
@@ -116,20 +119,15 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
     // Trigger voice synthesis if enabled
     if (get().voiceEnabled) {
       try {
-        const response = await fetch('http://localhost:8001/api/speak', {
+        const apiUrl = import.meta.env.VITE_TTS_API_URL || 'http://localhost:8001/api/speak';
+
+        const response = await fetch(apiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text,
-            tonescore: 80.0 // Default ToneScore parameter
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, tonescore: 80.0 })
         });
 
-        if (!response.ok) {
-          throw new Error(`Speech synthesis failed: ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
 
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
@@ -181,4 +179,20 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   toggleListening: () => set((state) => ({ isListening: !state.isListening })),
 
   setFacsState: (facs) => set({ facsState: facs }),
+
+  initializeAudio: async () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const audioCtx = new AudioContextClass();
+        await audioCtx.resume();
+      }
+      set({ audioInitialized: true });
+    } catch (err) {
+      console.error("Failed to initialize audio context:", err);
+      // Even if it fails, set to true so user isn't stuck forever, 
+      // though audio might still be blocked.
+      set({ audioInitialized: true });
+    }
+  },
 }))
