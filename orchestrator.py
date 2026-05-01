@@ -127,11 +127,14 @@ def secure_virtus_encrypt(data: Dict[str, Any], client_public_key: bytes) -> byt
         encrypted_bundle = pq.encrypt(client_public_key, payload)  # bundle = ephemeral_pub + ct + tag
 
         # Tier 7 LSB stego
-        steg = LSBSteganography()
-        stego_bytes = steg.hide(_DEFAULT_CARRIER_PATH, encrypted_bundle.hex())  # hex for text-based LSB
-
-        logger.info(f"VIRTUS outbound: PQ-encrypted {len(payload)}B → stego {len(stego_bytes)}B")
-        return stego_bytes
+        try:
+            steg = LSBSteganography()
+            stego_bytes = steg.hide(_DEFAULT_CARRIER_PATH, encrypted_bundle.hex())  # hex for text-based LSB
+            logger.info(f"VIRTUS outbound: PQ-encrypted {len(payload)}B → stego {len(stego_bytes)}B")
+            return stego_bytes
+        except Exception as steg_err:
+            logger.warning(f"VIRTUS stego failed (carrier missing or broken): {steg_err}. Returning raw PQ bundle.")
+            return encrypted_bundle
 
     except Exception as e:
         logger.critical(f"VIRTUS ENCRYPT FAILURE: {e}", exc_info=True)
