@@ -173,11 +173,11 @@ export function GiovanniAvatar() {
       <AnimatePresence mode="wait">
         {currentMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+            initial={{ opacity: 0, x: 10, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 10, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="absolute top-full mt-4 right-0 w-80 max-w-sm"
+            className="absolute top-0 right-full mr-6 w-80 max-w-sm"
           >
             <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 shadow-2xl giovanni-glow">
               <div className="flex items-center gap-2 mb-2">
@@ -209,7 +209,7 @@ export function GiovanniAvatar() {
               )}
             </div>
 
-            <div className="absolute -top-2 right-8 w-4 h-4 bg-gray-900 border-l border-t border-gray-700 transform rotate-45" />
+            <div className="absolute top-10 -right-2 w-4 h-4 bg-gray-900 border-r border-t border-gray-700 transform rotate-45" />
           </motion.div>
         )}
       </AnimatePresence>

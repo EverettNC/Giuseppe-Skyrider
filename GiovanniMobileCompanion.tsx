@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Smartphone, Calendar, Mic, Share2 } from 'lucide-react'
-import { Button } from './Button' // FIXED: Pointing to root
-import { Card, CardContent } from './Card' // FIXED: Pointing to root
+import { Button } from './button' // FIXED: Pointing to root
+import { Card, CardContent } from './card' // FIXED: Pointing to root
 import { getUpcomingTasks, TaskEntry } from './GiuseppeScheduler'
 import { useNotesStore, type Note } from './GiuseppeNotesStore'
 import { useGiovanniStore } from './GiovanniStore'
@@ -88,7 +88,7 @@ export function GiovanniMobileCompanion() {
                       <span className="uppercase">{note.type}</span>
                       <span>{new Date(note.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
                     </div>
-                    <p>{note.summary || note.content}</p>
+                    <p>{note.content}</p>
                   </div>
                 ))
               )}
@@ -102,7 +102,7 @@ export function GiovanniMobileCompanion() {
 
 function buildShareText(tasks: TaskEntry[], notes: Note[]): string {
   const nextTask = tasks[0]
-  const noteSnippet = notes[0]?.summary || notes[0]?.content || 'No notes yet'
+  const noteSnippet = notes[0]?.content || 'No notes yet'
   const taskLine = nextTask ? `${nextTask.label} at ${new Date(nextTask.datetime_utc).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Open block'
   return `Next: ${taskLine}\nLast note: ${noteSnippet}`
 }

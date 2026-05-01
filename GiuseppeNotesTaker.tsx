@@ -25,8 +25,8 @@ import { Button } from './button';
 // Speech Recognition types
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition?: any;
+    webkitSpeechRecognition?: any;
   }
 }
 

@@ -53,7 +53,7 @@ export function GiovanniPhotoCurator() {
         {
           id: '1',
           filename: 'studio_setup_001.jpg',
-          path: '/photos/studio_setup_001.jpg',
+          path: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=600&auto=format&fit=crop',
           date: new Date('2025-11-01'),
           vibe: 'behind_the_scenes',
           tags: ['studio', 'workspace', 'creative'],
@@ -63,7 +63,7 @@ export function GiovanniPhotoCurator() {
         {
           id: '2',
           filename: 'confident_portrait.jpg',
-          path: '/photos/confident_portrait.jpg',
+          path: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop',
           date: new Date('2025-11-05'),
           vibe: 'powerful_bitch_energy',
           tags: ['portrait', 'confidence', 'powerful'],
@@ -73,7 +73,7 @@ export function GiovanniPhotoCurator() {
         {
           id: '3',
           filename: 'creative_process.jpg',
-          path: '/photos/creative_process.jpg',
+          path: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=600&auto=format&fit=crop',
           date: new Date('2025-11-07'),
           vibe: 'creative_chaos',
           tags: ['process', 'art', 'messy'],
@@ -244,8 +244,12 @@ function PhotoCard({
 
   return (
     <div className="relative group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-giovanni-accent transition-all duration-300">
-      <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center">
-        <Image className="w-12 h-12 text-gray-800 group-hover:scale-110 transition-transform" />
+      <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center overflow-hidden">
+        {photo.path ? (
+          <img src={photo.path} alt={photo.filename} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        ) : (
+          <Image className="w-12 h-12 text-gray-800 group-hover:scale-110 transition-transform" />
+        )}
       </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">

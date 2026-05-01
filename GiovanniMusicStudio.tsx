@@ -17,8 +17,8 @@ import {
   Timer,
   Headphones
 } from 'lucide-react'
-import { Card } from './Card' // FIXED: Path is now at root
-import { Button } from './Button' // FIXED: Path is now at root
+import { Card } from './card' // FIXED: Path is now at root
+import { Button } from './button' // FIXED: Path is now at root
 import { useGiovanniStore } from './GiovanniStore'
 
 const CHORD_PROGRESSIONS = [

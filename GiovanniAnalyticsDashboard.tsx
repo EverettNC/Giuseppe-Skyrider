@@ -181,10 +181,10 @@ const GiovanniAnalyticsDashboard: React.FC = () => {
              {messages.slice(-5).map((msg, i) => (
                <div key={i} className="border-l-2 border-gray-800 pl-4 py-1">
                   <div className="flex justify-between text-[10px] text-gray-500 mb-1 font-mono uppercase">
-                    <span>{msg.role}</span>
+                    <span>{msg.mood}</span>
                     <span>{new Date().toLocaleTimeString()}</span>
                   </div>
-                  <p className="text-xs text-gray-300 line-clamp-2">{msg.content}</p>
+                  <p className="text-xs text-gray-300 line-clamp-2">{msg.text}</p>
                </div>
              ))}
              <div className="pt-4 flex justify-center">

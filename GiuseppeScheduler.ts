@@ -27,12 +27,34 @@ interface ScheduleData {
 let schedule: TaskEntry[] = [];
 let isLoaded = false;
 
+export function addTask(task: TaskEntry) {
+  schedule.push(task);
+  schedule.sort((a, b) => new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime());
+  
+  if (typeof window !== 'undefined') {
+    const customTasks = JSON.parse(localStorage.getItem('giovanni_custom_tasks') || '[]');
+    customTasks.push(task);
+    localStorage.setItem('giovanni_custom_tasks', JSON.stringify(customTasks));
+  }
+}
+
 export async function loadSchedule(path: string = "/demo_schedule_2025w45.json"): Promise<TaskEntry[]> {
   try {
     const res = await fetch(path);
     if (!res.ok) throw new Error("Failed to load schedule JSON");
     const data: ScheduleData = await res.json();
-    schedule = data.schedule || [];
+    let baseSchedule = data.schedule || [];
+    
+    // Load custom tasks from localStorage
+    if (typeof window !== 'undefined') {
+      const customTasks = JSON.parse(localStorage.getItem('giovanni_custom_tasks') || '[]');
+      baseSchedule = [...baseSchedule, ...customTasks];
+    }
+    
+    // Sort all tasks chronologically
+    baseSchedule.sort((a, b) => new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime());
+    
+    schedule = baseSchedule;
     isLoaded = true;
     return schedule;
   } catch (error) {

@@ -19,17 +19,17 @@ import {
 import { useGiovanniStore } from './GiovanniStore'
 
 // PERSISTENCE & AVATAR (Named Exports)
-import { GiovanniAvatar } from './GiovanniAvatar' 
+import { GiovanniAvatar } from './GiovanniAvatar'
 import { GiovanniMobileCompanion } from './GiovanniMobileCompanion'
 import { GiovanniCommandCenter } from './GiovanniCommandCenter'
 import { GiovanniReminders, useMorningMotivation, useHydrationReminder } from './GiovanniReminders'
 
 // DASHBOARD CORE (Default Export)
-import GiovanniAnalyticsDashboard from './GiovanniAnalyticsDashboard' 
+import GiovanniAnalyticsDashboard from './GiovanniAnalyticsDashboard'
 
 // MODULES (Named Exports - FIXED with curly braces)
 import { GiovanniPhotoCurator } from './GiovanniPhotoCurator'
-import GiovanniSocialMedia from './GiovanniSocialMedia'; 
+import GiovanniSocialMedia from './GiovanniSocialMedia';
 import { GiovanniStudioOrganizer } from './GiovanniStudioOrganizer'
 import { GiovanniMusicStudio } from './GiovanniMusicStudio'
 
@@ -37,7 +37,8 @@ import { GiovanniMusicStudio } from './GiovanniMusicStudio'
 import { GiuseppePanel } from './GiuseppePanel'
 import GiuseppeNotesTaker from './GiuseppeNotesTaker'
 import GiuseppeBook from './GiuseppeBook'
-import { Button } from './Button' 
+import { Button } from './button'
+import React from 'react'
 
 type View = 'dashboard' | 'schedule' | 'photos' | 'social' | 'studio' | 'notes' | 'book' | 'music' | 'mobile'
 
@@ -46,11 +47,20 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { isListening, toggleListening, audioInitialized, initializeAudio } = useGiovanniStore()
 
+  useMorningMotivation()
+  useHydrationReminder()
+
+  React.useEffect(() => {
+    const handleVoiceNav = () => setCurrentView('schedule')
+    window.addEventListener('giovanni-navigate-schedule', handleVoiceNav)
+    return () => window.removeEventListener('giovanni-navigate-schedule', handleVoiceNav)
+  }, [])
+
   if (!audioInitialized) {
     return (
       <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-gray-100">
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-amber-900/20 pointer-events-none" />
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 flex flex-col items-center gap-8"
@@ -63,7 +73,7 @@ export default function App() {
               Ready to initialize audio systems for your session.
             </p>
           </div>
-          <Button 
+          <Button
             onClick={initializeAudio}
             size="lg"
             className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-8 px-16 rounded-full text-2xl shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(168,85,247,0.8)] border border-purple-400/30 flex items-center gap-4"
@@ -76,8 +86,6 @@ export default function App() {
     )
   }
 
-  useMorningMotivation()
-  useHydrationReminder()
 
   const navigation = [
     { id: 'dashboard' as const, label: 'Overview', icon: LayoutDashboard },

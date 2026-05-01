@@ -5,8 +5,8 @@ import { useGiovanniStore } from './GiovanniStore'
 // Support for browser speech recognition
 declare global {
   interface Window {
-    webkitSpeechRecognition?: typeof SpeechRecognition
-    SpeechRecognition?: typeof SpeechRecognition
+    webkitSpeechRecognition?: any
+    SpeechRecognition?: any
   }
 }
 
@@ -17,7 +17,7 @@ declare global {
  */
 export function GiovanniCommandCenter() {
   const { speak, setState, isListening } = useGiovanniStore()
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -63,9 +63,21 @@ export function GiovanniCommandCenter() {
         window.dispatchEvent(new CustomEvent('giovanni-request-summary'))
         speak("Consulting the memory mesh now.", "hype")
       }
+
+      // COMMAND: Navigate to Schedule
+      if (normalized.includes('giovanni schedule')) {
+        window.dispatchEvent(new CustomEvent('giovanni-navigate-schedule'))
+        speak("Opening the timeline. Let's see what's on deck.", "swagger")
+        return
+      }
+
+      // FALLBACK: Conversations / Learning
+      if (normalized.length > 3) {
+        useGiovanniStore.getState().think(transcript)
+      }
     }
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       const latest = event.results[event.results.length - 1]
       if (!latest || latest.isFinal === false) return
       const transcript = latest[0]?.transcript
@@ -74,7 +86,7 @@ export function GiovanniCommandCenter() {
       }
     }
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       console.error('Command Center Audio Error:', event.error)
       // Restart on glitches so the wake phrase keeps working without manual intervention
       if (isListening) {

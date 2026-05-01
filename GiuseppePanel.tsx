@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { Button } from "./button";
 import { Switch } from "./switch";
-import { getAllTasks, getCurrentTask, getUpcomingTasks, TaskEntry } from "./GiuseppeScheduler";
+import { getAllTasks, getCurrentTask, getUpcomingTasks, addTask, TaskEntry } from "./GiuseppeScheduler";
 import { useGiovanniStore } from "./GiovanniStore";
 import { giovanni } from "./GiovanniPersonality";
 import { Calendar, Mic, MicOff, Clock, Pill, Zap, Loader2 } from "lucide-react";
@@ -105,6 +105,31 @@ export function GiuseppePanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Add Task Button */}
+      <div className="flex justify-end -mt-2 mb-2">
+        <Button 
+          onClick={() => {
+            const date = new Date();
+            date.setMinutes(date.getMinutes() + 10); // 10 mins from now
+            addTask({
+              platforms: ["reminder"],
+              datetime_utc: date.toISOString(),
+              label: "Review Silicon Metrics",
+              caption: "Quick check-in on the cognitive mesh performance.",
+              video_filename: "",
+              thumbnail_filename: "",
+              hashtags: ["#metrics"],
+              metadata: { type: "general" }
+            });
+            loadAllTasks();
+            speak("Task added to the timeline.", "motivational");
+          }}
+          className="bg-giovanni-primary hover:bg-giovanni-primary/80 text-white text-xs py-1 h-8"
+        >
+          <Calendar className="w-3 h-3 mr-2" /> Inject Task (+10m)
+        </Button>
+      </div>
 
       {/* Current/Next Task Focus */}
       {currentTask ? (
