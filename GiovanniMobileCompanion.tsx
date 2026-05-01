@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Smartphone, Calendar, Mic, Share2 } from 'lucide-react'
-import { Button } from './components/ui/button'
-import { Card, CardContent } from './components/ui/card'
+import { Button } from './Button' // FIXED: Pointing to root
+import { Card, CardContent } from './Card' // FIXED: Pointing to root
 import { getUpcomingTasks, TaskEntry } from './GiuseppeScheduler'
 import { useNotesStore, type Note } from './GiuseppeNotesStore'
 import { useGiovanniStore } from './GiovanniStore'
