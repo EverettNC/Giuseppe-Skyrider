@@ -1,72 +1,70 @@
-# CHRISTMAN EMOTION & TONESCORE ENGINE v2.0
-# "Nothing Vital Lives Below Root"
-# Architecture: Multi-layer tone detection (Raw Audio -> Quantified Emotion)
+# CHRISTMAN EMOTION & TONESCORE ENGINE v2.1 (SOVEREIGN EDITION)
+# "Nothing Vital Lives Below Root" - Purged Librosa/LLVM dependencies.
+# Architecture: soundfile + scipy + torch (Native Intel-Metal Bridge)
 
 import torch
-import librosa
 import numpy as np
+import soundfile as sf
+from scipy import signal
 import hashlib
 from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForSequenceClassification
 
 class ChristmanToneEngine:
     def __init__(self, model_name="superb/wav2vec2-base-superb-er"):
-        print(f"[SYSTEM] Initializing Christman Tone Engine: {model_name}")
+        print(f"[SYSTEM] Initializing Sovereign Tone Engine: {model_name}")
         self.processor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
         self.model = Wav2Vec2ForSequenceClassification.from_pretrained(model_name)
         self.model.eval()
         
-        # Hardware acceleration for macOS Tahoe (MPS)
+        # Hardware acceleration for macOS (Metal/MPS)
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         self.model.to(self.device)
 
-        # The Carbon Reality Labels
         self.EMOTION_LABELS = [
             "neutral", "happy", "proud", "teasing", "annoyed", 
             "sarcastic", "sweetheart", "laugh", "tremble", "emphasis", "last_breath"
         ]
 
     def analyze_audio(self, wav_path: str) -> dict:
-        """
-        Extracts both the physiological state (pitch, shimmer) 
-        and the paralinguistic emotion from the raw audio waveform.
-        """
         try:
-            # 1. Load Audio (Force 16kHz for Wav2Vec2 compatibility)
-            y, sr = librosa.load(wav_path, sr=16000)
+            # 1. Load Audio (Sovereign Method: Soundfile)
+            data, sr = sf.read(wav_path)
             
-            # Mix stereo to mono if needed
-            if y.ndim == 2:
-                y = np.mean(y, axis=0)
+            # Mix stereo to mono
+            if len(data.shape) > 1:
+                data = np.mean(data, axis=1)
 
-            # 2. Physiological T1 Layer (The Carbon Leakage)
-            # Measure RMS energy to determine physical intensity/volume
-            rms_energy = librosa.feature.rms(y=y)[0]
-            intensity_norm = np.clip(np.mean(rms_energy) * 400, 0, 1)
+            # 2. Resample to 16kHz manually if needed (Reality over Library)
+            if sr != 16000:
+                num_samples = int(len(data) * 16000 / sr)
+                data = signal.resample(data, num_samples)
+                sr = 16000
 
-            # 3. Neural Paralinguistics T2 Layer
-            input_values = self.processor(y, sampling_rate=sr, return_tensors="pt", padding=True).input_values
+            # 3. Physiological T1 Layer (Root Intensity Math)
+            # RMS = Square root of the mean of the squares. No librosa needed.
+            rms_energy = np.sqrt(np.mean(data**2))
+            intensity_norm = np.clip(rms_energy * 400, 0, 1)
+
+            # 4. Neural Paralinguistics T2 Layer
+            input_values = self.processor(data, sampling_rate=sr, return_tensors="pt", padding=True).input_values
             input_values = input_values.to(self.device)
 
             with torch.no_grad():
                 logits = self.model(input_values).logits
                 probabilities = torch.softmax(logits, dim=-1)[0].cpu().numpy()
 
-            # Map raw probabilities to Christman Labels
             emotion_scores = {
                 self.EMOTION_LABELS[i] if i < len(self.EMOTION_LABELS) else f"unknown_{i}": round(float(p), 4)
                 for i, p in enumerate(probabilities)
             }
 
-            # Determine dominant state
             dominant_emotion = max(emotion_scores, key=emotion_scores.get)
-            
-            # 4. Generate Cadence Fingerprint (Hash)
-            cadence_hash = hashlib.sha1(y.tobytes()).hexdigest()[:16]
+            cadence_hash = hashlib.sha1(data.tobytes()).hexdigest()[:16]
 
             # 5. Actionable Routing Logic
             action_state = "NORMAL"
             if dominant_emotion in ["tremble", "last_breath"] or intensity_norm > 0.85:
-                action_state = "HOLD_SPACE" # Trigger the Hand of God or trauma protocols
+                action_state = "HOLD_SPACE" 
 
             return {
                 "modality": "audio",
@@ -77,14 +75,10 @@ class ChristmanToneEngine:
                 "raw_scores": emotion_scores
             }
 
-        except FileNotFoundError:
-            print(f"[ERROR] Carbon input missing. Cannot find {wav_path}")
-            return None
         except Exception as e:
-            print(f"[ERROR] ToneScore calculation failed: {e}")
+            print(f"[ERROR] Sovereign ToneScore failed: {e}")
             return None
 
-# --- Runtime Test Wiring ---
 if __name__ == "__main__":
     engine = ChristmanToneEngine()
-    # print(engine.analyze_audio("test_carbon_input.wav"))
+    # print(engine.analyze_audio("test.wav"))
