@@ -220,7 +220,7 @@ class EnhancedSpeechRecognition:
     def process_audio_data(
         self, audio_data: bytes, sample_rate: int = 16000, format_: str = "wav"
     ) -> Dict[str, Any]:
-        """Process audio data and perform speech recognition.
+        """Process audio data and perform REAL speech recognition.
 
         Args:
             audio_data: Raw audio data bytes
@@ -233,39 +233,36 @@ class EnhancedSpeechRecognition:
         if not audio_data:
             return {"error": "No audio data provided"}
 
-        self.logger.info(f"Processing {len(audio_data)} bytes of audio data")
+        self.logger.info(f"Processing {len(audio_data)} bytes of audio data for REAL transcription")
 
         # Mark as processing
         self.is_processing = True
 
         try:
-            # Save the audio data to a temporary file
-            import uuid
-            from datetime import datetime
+            import speech_recognition as sr
+            import io
 
-            file_id = str(uuid.uuid4())
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_path = os.path.join(
-                self.audio_cache_dir, f"audio_{timestamp}_{file_id}.wav"
-            )
-
-            # In a real implementation, this would process the audio into the correct format
-            # For now, we'll just save as is and simulate recognition
-
-            # Simulate recognition result
-            import random
-
-            # Sample phrases - in a real implementation, this would be actual recognition
-            sample_phrases = [
-                "Hello, I'm using BROCKSTON.",
-                "Can you help me with communication?",
-                "This is a test of speech recognition.",
-                "I'd like to know more about this system.",
-                "Thank you for helping me communicate.",
-            ]
-
-            recognized_text = random.choice(sample_phrases)
-            confidence = 0.7 + (random.random() * 0.25)  # 0.7-0.95
+            # Convert bytes to audio file-like object
+            audio_io = io.BytesIO(audio_data)
+            
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(audio_io) as source:
+                audio = recognizer.record(source)
+            
+            # Use Google Web Speech API as fallback/default (requires internet)
+            # In a sovereign setup, we'd use local Whisper or Vosk
+            try:
+                # Try local recognition if possible, or fallback to Google
+                recognized_text = recognizer.recognize_google(audio)
+                confidence = 0.95  # Google API doesn't always provide confidence easily
+            except sr.UnknownValueError:
+                recognized_text = ""
+                confidence = 0.0
+                self.logger.warning("Speech recognition could not understand audio")
+            except sr.RequestError as e:
+                self.logger.error(f"Could not request results from recognition service; {e}")
+                recognized_text = "[RECOGNITION_SERVICE_ERROR]"
+                confidence = 0.0
 
             # Create result
             result = {
@@ -273,14 +270,8 @@ class EnhancedSpeechRecognition:
                 "confidence": confidence,
                 "language": self.language,
                 "timestamp": time.time(),
-                "audio_path": file_path,
+                "source": "speech_recognition_lib"
             }
-
-            # Log the recognition
-            self.logger.info(
-                f"Audio processing result: '{recognized_text}' "
-                f"(confidence: {confidence:.2f})"
-            )
 
             # Update recognition context
             self._update_recognition_context(recognized_text)
@@ -291,7 +282,7 @@ class EnhancedSpeechRecognition:
             return result
         except Exception as e:
             self.logger.error(f"Error processing audio data: {e}")
-            return {"error": str(e)}
+            return {"error": str(e), "text": ""}
         finally:
             # Mark as no longer processing
             self.is_processing = False

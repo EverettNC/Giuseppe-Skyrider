@@ -170,6 +170,7 @@ class VoiceSynthesisOrchestrator:
         
         # Initialize synthesis engine with voice
         if self.xtts is None:
+            from xtts_engine import XTTSEngine
             self.xtts = XTTSEngine()
 
         # Load voice into engine

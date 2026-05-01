@@ -6,8 +6,6 @@ Supports voice cloning from short audio samples.
 Integrates with ICanHearYou emotion system.
 """
 
-import torch
-import torchaudio
 import numpy as np
 from pathlib import Path
 from typing import Optional, Dict
@@ -60,6 +58,7 @@ class XTTSEngine(BaseSynthesizer):
             return
 
         try:
+            import torch
             from TTS.api import TTS
 
             logger.info(f"Loading XTTS model: {self.model_name}")
@@ -107,6 +106,7 @@ class XTTSEngine(BaseSynthesizer):
             raise FileNotFoundError(f"Reference audio not found: {reference_audio}")
 
         # Validate audio length
+        import torchaudio
         audio, sr = torchaudio.load(str(reference_audio))
         duration = audio.shape[1] / sr
 

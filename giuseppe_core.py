@@ -144,6 +144,78 @@ class VoiceGenRequest(BaseModel):
     emotion: str = Field("neutral", enum=["neutral", "happy", "proud", "teasing", "annoyed", "sarcastic", "sweetheart", "laugh", "tremble", "emphasis", "last_breath"])
     exaggeration: float = Field(0.0, ge=-1.0, le=1.0)
 
+from enhanced_speech_recognition import EnhancedSpeechRecognition
+from fastapi import BackgroundTasks
+
+# Global state for listening
+speech_recognizer = EnhancedSpeechRecognition()
+is_listening_active = False
+
+@app.post("/api/listen")
+async def start_listening(background_tasks: BackgroundTasks):
+    global is_listening_active
+    if is_listening_active:
+        return {"status": "already listening"}
+    
+    is_listening_active = True
+    background_tasks.add_task(process_speech_loop)
+    return {"status": "started listening"}
+
+@app.post("/api/stop-listening")
+async def stop_listening():
+    global is_listening_active
+    is_listening_active = False
+    return {"status": "stopped listening"}
+
+async def process_speech_loop():
+    global is_listening_active
+    while is_listening_active:
+        # This is a blocking call in the background thread
+        text = speech_recognizer.listen_once()
+        if text:
+            # Feed to brain
+            print(f"[VOICE] Heard: {text}")
+            
+            # Step through the brain
+            result = global_fusion_engine.step(text)
+            
+            # Broadcast to UI
+            await broadcaster.broadcast({
+                "type": "thought",
+                "input": text,
+                "reply": result.get("output", ""),
+                "mood": result.get("persona_state", {}).get("mood", "swagger")
+            })
+        
+        # Small sleep to prevent tight loop if recognition fails instantly
+        await asyncio.sleep(0.1)
+
+import asyncio
+from fastapi.responses import StreamingResponse
+
+class Broadcaster:
+    def __init__(self):
+        self.queues = []
+
+    async def subscribe(self):
+        queue = asyncio.Queue()
+        self.queues.append(queue)
+        try:
+            while True:
+                yield await queue.get()
+        finally:
+            self.queues.remove(queue)
+
+    async def broadcast(self, data: dict):
+        for queue in self.queues:
+            await queue.put(f"data: {json.dumps(data)}\n\n")
+
+broadcaster = Broadcaster()
+
+@app.get("/api/events")
+async def events_stream():
+    return StreamingResponse(broadcaster.subscribe(), media_type="text/event-stream")
+
 # ============================================================================
 # Endpoints
 # ============================================================================
@@ -250,40 +322,55 @@ async def think(
         raise HTTPException(500, str(e))
 
 
+from synthesis_orchestrator import VoiceSynthesisOrchestrator
+from config import Tier
+
+# Initialize local synthesis orchestrator
+vocal_orchestrator = VoiceSynthesisOrchestrator(tier=Tier.ULTRA)
+
+# Auto-load the latest voicepack if it exists
+def get_latest_voicepack():
+    voicepacks = list((VAULT_DIR / "voicepacks").glob("*.vpack"))
+    if voicepacks:
+        # Sort by mtime
+        voicepacks.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+        return voicepacks[0]
+    return None
+
+latest_vpack = get_latest_voicepack()
+if latest_vpack:
+    try:
+        vocal_orchestrator.load_voicepack(latest_vpack)
+        logger.info(f"Loaded sovereign voicepack: {latest_vpack.name}")
+    except Exception as e:
+        logger.warning(f"Failed to load voicepack {latest_vpack.name}: {e}")
+
 @app.post("/api/speak")
 async def speak(request: SpeakRequest):
     try:
-        api_key = os.getenv("ELEVENLABS_API_KEY")
-        voice_id = os.getenv("ELEVENLABS_VOICE_ID")
-        if not api_key or not voice_id:
-            raise HTTPException(500, "Missing ElevenLabs credentials")
+        # Use local synthesis instead of ElevenLabs
+        logger.info(f"Local synthesis requested for text: {request.text[:50]}...")
+        
+        result = vocal_orchestrator.synthesize(
+            text=request.text,
+            tonescore=request.tonescore,
+            generate_lipsync=True
+        )
 
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {
-            "Accept": "audio/mpeg",
-            "Content-Type": "application/json",
-            "xi-api-key": api_key
-        }
-        data = {
-            "text": request.text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}
-        }
-
-        resp = requests.post(url, json=data, headers=headers)
-        if resp.status_code != 200:
-            logger.error(f"ElevenLabs error: {resp.text}")
-            raise HTTPException(500, "Synthesis failed")
-
-        # Routing to VAULT_DIR rather than hardcoded string paths
         audio_path = VAULT_DIR / "output" / f"{uuid.uuid4()}.mp3"
-        audio_path.write_bytes(resp.content)
+        # SynthesisResult has audio as numpy array, we need to save it
+        import torchaudio
+        import torch
+        
+        audio_tensor = torch.from_numpy(result["audio"]).unsqueeze(0)
+        torchaudio.save(str(audio_path), audio_tensor, result["sample_rate"])
 
         return FileResponse(audio_path, media_type="audio/mpeg", filename=audio_path.name)
 
     except Exception as e:
-        logger.error(f"Synthesis error: {e}", exc_info=True)
-        raise HTTPException(500, str(e))
+        logger.error(f"Local synthesis error: {e}", exc_info=True)
+        # Fallback to a warning audio or error message
+        raise HTTPException(500, f"Local synthesis failed: {str(e)}")
 
 
 @app.post("/train", response_model=TrainingResponse)

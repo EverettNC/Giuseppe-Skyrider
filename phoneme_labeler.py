@@ -10,12 +10,20 @@ from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 import json
 import tempfile
-import textgrid
-
 from logger import get_logger
 from config import get_config
 
 logger = get_logger(__name__)
+
+try:
+    import textgrid
+    TEXTGRID_AVAILABLE = True
+except ImportError:
+    TEXTGRID_AVAILABLE = False
+    if 'logger' in globals():
+        logger.warning("textgrid library not found. Lip-sync will use simplified timing.")
+    else:
+        print("[WARNING] textgrid library not found. Lip-sync will use simplified timing.")
 
 
 class Phoneme:
@@ -197,6 +205,10 @@ class PhonemeLabeler:
         Returns:
             List of Phoneme objects
         """
+        if not TEXTGRID_AVAILABLE:
+            logger.error("Attempted to parse TextGrid without textgrid library installed.")
+            return []
+        
         tg = textgrid.TextGrid.fromFile(str(textgrid_path))
         
         phonemes = []

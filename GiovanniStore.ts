@@ -62,6 +62,9 @@ interface GiovanniStore {
   audioInitialized: boolean
   initializeAudio: () => Promise<void>
   think: (text: string) => Promise<void>
+  error: string | null
+  clearError: () => void
+  initEvents: () => () => void
 }
 
 export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
@@ -77,6 +80,7 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
   isListening: false,
   facsState: null,
   audioInitialized: false,
+  error: null,
 
   // Actions
   setMood: (mood) => set({ mood }),
@@ -120,7 +124,8 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
     // Trigger voice synthesis if enabled and audio is initialized
     if (get().voiceEnabled && get().audioInitialized) {
       try {
-        const apiUrl = (import.meta as any).env.VITE_TTS_API_URL || 'http://localhost:8001/api/speak';
+        const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:8001';
+        const apiUrl = `${baseUrl}/api/speak`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -149,19 +154,13 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
         await audio.play();
       } catch (err) {
         console.error('Audio playback failed:', err);
-        set({ state: 'idle' });
-        // Fallback visible string
-        const fallbackMsg: GiovanniMessage = {
-          id: `error-${Date.now()}`,
-          text: "[SILICON FAILURE]: Synthesis offline or keys missing. Please check .env",
-          mood: 'sassy',
-          timestamp: new Date(),
-          spoken: true
-        };
-        set((state) => ({
-          messages: [...state.messages, fallbackMsg],
-          currentMessage: fallbackMsg
-        }));
+        set({ 
+          state: 'idle',
+          error: "[SILICON FAILURE]: Local synthesis engine offline. Check backend logs."
+        });
+        
+        // Auto-clear error after 5 seconds
+        setTimeout(() => get().clearError(), 5000);
       }
     } else {
       // If voice is disabled, just show the message briefly
@@ -177,7 +176,21 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
 
   setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
 
-  toggleListening: () => set((state) => ({ isListening: !state.isListening })),
+  toggleListening: async () => {
+    const currentState = get().isListening;
+    const nextState = !currentState;
+    
+    set({ isListening: nextState });
+    
+    try {
+      const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:8001';
+      const endpoint = nextState ? `${baseUrl}/api/listen` : `${baseUrl}/api/stop-listening`;
+      
+      await fetch(endpoint, { method: 'POST' });
+    } catch (err) {
+      console.error("Failed to toggle backend listening:", err);
+    }
+  },
 
   setFacsState: (facs) => set({ facsState: facs }),
 
@@ -225,5 +238,24 @@ export const useGiovanniStore = create<GiovanniStore>((set, get) => ({
       set({ state: 'idle' });
       await get().speak("My cognitive mesh is offline. Check the brain.", 'sassy');
     }
+  },
+  clearError: () => set({ error: null }),
+  initEvents: () => {
+    const baseUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:8001';
+    const eventSource = new EventSource(`${baseUrl}/api/events`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'thought') {
+          // Add the reply to the store and speak it
+          get().speak(data.reply, data.mood);
+        }
+      } catch (err) {
+        console.error("Failed to parse event data:", err);
+      }
+    };
+    
+    return () => eventSource.close();
   },
 }))

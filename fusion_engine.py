@@ -448,9 +448,8 @@ class FusionEngine:
         coherence = cosine(chosen_c, self.z)
         safety_pen = -self.aegis.score_safety(chosen_c)
         
-        # 7) Realize output (toy text)
-        top_terms = sorted(safe_vec, key=lambda k: -abs(safe_vec[k]))[:6]
-        out_text = " ".join(top_terms) or "ok"
+        # 7) Realize output (Persona-driven response generation)
+        out_text = self._realize_response(top_terms, persona_state, intent_text)
         
         # Retrieve dynamically evolved persona weights
         persona_state = self.get_persona_weights()
@@ -482,6 +481,56 @@ class FusionEngine:
 
         return event
     
+    def _realize_response(self, terms: List[str], persona: Dict[str, float], intent: str) -> str:
+        """Realize symbolic terms into persona-driven text."""
+        
+        sass = persona.get("sass", 0.5)
+        hype = persona.get("hype", 0.5)
+        
+        # Identify core theme from terms
+        theme = "general"
+        for t in terms:
+            if t in ["recipe", "bake", "pie"]: theme = "baking"
+            elif t in ["safe", "calm", "presence"]: theme = "emotional"
+            elif t in ["remind", "memory", "schedule"]: theme = "assistant"
+        
+        # Templates
+        templates = {
+            "baking": [
+                "Look, we're crafting masterpiece flavors here. {terms}.",
+                "Focus on the process. The {terms} are coming together perfectly.",
+                "Precision and soul, that's how we bake. Got the {terms} ready?"
+            ],
+            "emotional": [
+                "I'm here. We're holding the space. {terms}.",
+                "Breath in. It's about being present with the {terms}.",
+                "The energy is shifting. We're keeping it {terms}."
+            ],
+            "assistant": [
+                "I've got the grid locked. {terms} is synced.",
+                "Total command of the timeline. {terms} handled.",
+                "Execution is everything. The {terms} are set in stone."
+            ],
+            "general": [
+                "Yeah, I'm tracking. {terms}.",
+                "Crystal clear. We're moving on {terms}.",
+                "Let's get it. {terms} is the move."
+            ]
+        }
+        
+        # Select base and inject terms
+        base = random.choice(templates[theme])
+        term_str = ", ".join(terms[:3])
+        resp = base.format(terms=term_str)
+        
+        # Add persona flavor
+        if sass > 0.7:
+            resp = f"Listen, {resp.lower()} Obviously."
+        elif hype > 0.7:
+            resp = f"BOOM! {resp} Let's GO!"
+            
+        return resp
+
     def run_dialogue(self, turns: List[str]) -> Dict:
         """Run multi-turn dialogue through fusion engine.
 
